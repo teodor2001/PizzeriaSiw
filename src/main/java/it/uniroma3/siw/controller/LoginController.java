@@ -34,7 +34,7 @@ public class LoginController {
 
     @PostMapping("/register")
     public String registerCliente(@ModelAttribute("cliente") Cliente cliente) {
-        clienteService.save(cliente);
+        clienteService.create(cliente);
         return "redirect:/login?registrationSuccess";
     }
 }
