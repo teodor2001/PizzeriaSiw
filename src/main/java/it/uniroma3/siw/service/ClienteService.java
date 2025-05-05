@@ -21,12 +21,12 @@ public class ClienteService {
 
     @Transactional
     public Cliente save(Cliente cliente) {
+        String encodedPassword = passwordEncoder.encode(cliente.getPassword());
+        cliente.setPassword(encodedPassword);
         return clienteRepository.save(cliente);
     }
-
     @Transactional
     public Cliente create(Cliente cliente) {
-        // Assicurati che la password sia codificata prima di salvarla
         String encodedPassword = passwordEncoder.encode(cliente.getPassword());
         cliente.setPassword(encodedPassword);
         return clienteRepository.save(cliente);
@@ -54,6 +54,4 @@ public class ClienteService {
     public void deleteById(Long id) {
         clienteRepository.deleteById(id);
     }
-
-    // Altri metodi di business logic relativi ai clienti possono essere aggiunti qui
 }
