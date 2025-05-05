@@ -24,12 +24,7 @@ public class Menu {
     @OneToMany(mappedBy = "menuAssociato")
     private List<Amministratore> amministratoriAssociati = new ArrayList<>();
     
-    @ManyToMany
-    @JoinTable(
-        name = "menu_bevanda",
-        joinColumns = @JoinColumn(name = "menu_id"),
-        inverseJoinColumns = @JoinColumn(name = "bevanda_id")
-    )
+    @OneToMany(mappedBy = "menu") // Modifica: Relazione one-to-many con Bevanda
     private List<Bevanda> bevande = new ArrayList<>();
 
     //Costruttore predefinito se no JPA si arrabbia
@@ -93,12 +88,12 @@ public class Menu {
 
     public void aggiungiBevanda(Bevanda bevanda) {
         this.bevande.add(bevanda);
-        bevanda.getMenu().add(this);
+        bevanda.setMenu(this);
     }
 
     public void rimuoviBevanda(Bevanda bevanda) {
         this.bevande.remove(bevanda);
-        bevanda.getMenu().remove(this);
+        bevanda.setMenu(null);
     }
     
     public Pizzeria getPizzeria() {

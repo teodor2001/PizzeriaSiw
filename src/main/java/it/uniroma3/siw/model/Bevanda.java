@@ -15,8 +15,8 @@ public class Bevanda {
     private double prezzo;
     private String descrizione;
     
-    @ManyToMany(mappedBy = "bevande")
-    private List<Menu> menu = new ArrayList<>();
+    @ManyToOne // Modifica: Relazione many-to-one con Menu
+    private Menu menu;
 
     //Costruttore predefinito se no JPA si arrabbia
     public Bevanda() {
@@ -62,11 +62,11 @@ public class Bevanda {
     }
     
     //Da valutare se ha senso tenere questo tipo di metodi per casi particolari
-    public List<Menu> getMenu() {
+    public Menu getMenu() {
         return menu;
     }
 
-    public void setMenu(List<Menu> menu) {
+    public void setMenu(Menu menu) {
         this.menu = menu;
     }
 
