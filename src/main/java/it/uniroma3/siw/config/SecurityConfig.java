@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,7 +19,7 @@ public class SecurityConfig {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
-    @Autowired
+    @Autowired // Spring troverà il PasswordEncoder definito in PasswordEncoderConfig
     private PasswordEncoder passwordEncoder;
 
     @Bean
@@ -44,7 +45,9 @@ public class SecurityConfig {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true) // Reindirizza alla homepage dopo il login
+                        .successHandler((request, response, authentication) -> {
+                            response.sendRedirect("/pizze_scontate"); // Reindirizza direttamente alle pizze scontate
+                        })
                         .permitAll()
                 )
                 .logout(logout -> logout
@@ -58,7 +61,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-    //     auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
-    // }
+    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
+    }
 }
