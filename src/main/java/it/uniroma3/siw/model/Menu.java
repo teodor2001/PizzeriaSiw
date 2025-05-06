@@ -8,119 +8,120 @@ import jakarta.persistence.*;
 
 @Entity
 public class Menu {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Pizza> pizze = new ArrayList<>();
+	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Pizza> pizze = new ArrayList<>();
 
-    @OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Ingrediente> ingredientiExtra = new ArrayList<>();
+	@OneToMany(mappedBy = "menu", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<Ingrediente> ingredientiExtra = new ArrayList<>();
 
-    @OneToOne(mappedBy = "menu")
-    private Pizzeria pizzeria;
-    
-    @OneToMany(mappedBy = "menuAssociato")
-    private List<Amministratore> amministratoriAssociati = new ArrayList<>();
-    
-    @OneToMany(mappedBy = "menu") // Modifica: Relazione one-to-many con Bevanda
-    private List<Bevanda> bevande = new ArrayList<>();
+	@OneToOne(mappedBy = "menu")
+	private Pizzeria pizzeria;
 
-    //Costruttore predefinito se no JPA si arrabbia
-    public Menu() {
-    }
-    
-    //Costruttore vero
-    public Menu(List<Pizza> pizze, List<Ingrediente> ingredientiExtra, List<Bevanda> bevande) {
-        this.pizze = pizze;
-        this.ingredientiExtra = ingredientiExtra;
-        this.bevande = bevande;
-    }
-    
-    public Long getId() {
-        return id;
-    }
+	@OneToMany(mappedBy = "menuAssociato")
+	private List<Amministratore> amministratoriAssociati = new ArrayList<>();
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+	@OneToMany(mappedBy = "menu") // Modifica: Relazione one-to-many con Bevanda
+	private List<Bevanda> bevande = new ArrayList<>();
 
-    public List<Pizza> getPizze() {
-        return pizze;
-    }
+	// Costruttore predefinito se no JPA si arrabbia
+	public Menu() {
+	}
 
-    public void setPizze(List<Pizza> pizze) {
-        this.pizze = pizze;
-    }
+	// Costruttore vero
+	public Menu(List<Pizza> pizze, List<Ingrediente> ingredientiExtra, List<Bevanda> bevande) {
+		this.pizze = pizze;
+		this.ingredientiExtra = ingredientiExtra;
+		this.bevande = bevande;
+	}
 
-    public List<Ingrediente> getIngredientiExtra() {
-        return ingredientiExtra;
-    }
+	public Long getId() {
+		return id;
+	}
 
-    public void setIngredientiExtra(List<Ingrediente> ingredientiExtra) {
-        this.ingredientiExtra = ingredientiExtra;
-    }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-    public List<Bevanda> getBevande() {
-        return bevande;
-    }
+	public List<Pizza> getPizze() {
+		return pizze;
+	}
 
-    public void setBevande(List<Bevanda> bevande) {
-        this.bevande = bevande;
-    }
+	public void setPizze(List<Pizza> pizze) {
+		this.pizze = pizze;
+	}
 
-    public void aggiungiPizza(Pizza pizza) {
-        this.pizze.add(pizza);
-    }
+	public List<Ingrediente> getIngredientiExtra() {
+		return ingredientiExtra;
+	}
 
-    public void rimuoviPizza(Pizza pizza) {
-        this.pizze.remove(pizza);
-    }
+	public void setIngredientiExtra(List<Ingrediente> ingredientiExtra) {
+		this.ingredientiExtra = ingredientiExtra;
+	}
 
-    public void aggiungiIngredienteExtra(Ingrediente ingrediente) {
-        this.ingredientiExtra.add(ingrediente);
-    }
+	public List<Bevanda> getBevande() {
+		return bevande;
+	}
 
-    public void rimuoviIngredienteExtra(Ingrediente ingrediente) {
-        this.ingredientiExtra.remove(ingrediente);
-    }
+	public void setBevande(List<Bevanda> bevande) {
+		this.bevande = bevande;
+	}
 
-    public void aggiungiBevanda(Bevanda bevanda) {
-        this.bevande.add(bevanda);
-        bevanda.setMenu(this);
-    }
+	public void aggiungiPizza(Pizza pizza) {
+		this.pizze.add(pizza);
+	}
 
-    public void rimuoviBevanda(Bevanda bevanda) {
-        this.bevande.remove(bevanda);
-        bevanda.setMenu(null);
-    }
-    
-    public Pizzeria getPizzeria() {
-        return pizzeria;
-    }
+	public void rimuoviPizza(Pizza pizza) {
+		this.pizze.remove(pizza);
+	}
 
-    public void setPizzeria(Pizzeria pizzeria) {
-        this.pizzeria = pizzeria;
-    }
-    public List<Amministratore> getAmministratoriAssociati() {
-        return amministratoriAssociati;
-    }
+	public void aggiungiIngredienteExtra(Ingrediente ingrediente) {
+		this.ingredientiExtra.add(ingrediente);
+	}
 
-    public void setAmministratoriAssociati(List<Amministratore> amministratoriAssociati) {
-        this.amministratoriAssociati = amministratoriAssociati;
-        
-    }
-    
-    public void aggiungiAmministratoreAssociato(Amministratore amministratore) {
-        this.amministratoriAssociati.add(amministratore);
-        amministratore.setMenuAssociato(this);
-    }
+	public void rimuoviIngredienteExtra(Ingrediente ingrediente) {
+		this.ingredientiExtra.remove(ingrediente);
+	}
 
-    public void rimuoviAmministratoreResponsabile(Amministratore amministratore) {
-        this.amministratoriAssociati.remove(amministratore);
-        amministratore.setMenuAssociato(null);
-    }
+	public void aggiungiBevanda(Bevanda bevanda) {
+		this.bevande.add(bevanda);
+		bevanda.setMenu(this);
+	}
+
+	public void rimuoviBevanda(Bevanda bevanda) {
+		this.bevande.remove(bevanda);
+		bevanda.setMenu(null);
+	}
+
+	public Pizzeria getPizzeria() {
+		return pizzeria;
+	}
+
+	public void setPizzeria(Pizzeria pizzeria) {
+		this.pizzeria = pizzeria;
+	}
+
+	public List<Amministratore> getAmministratoriAssociati() {
+		return amministratoriAssociati;
+	}
+
+	public void setAmministratoriAssociati(List<Amministratore> amministratoriAssociati) {
+		this.amministratoriAssociati = amministratoriAssociati;
+
+	}
+
+	public void aggiungiAmministratoreAssociato(Amministratore amministratore) {
+		this.amministratoriAssociati.add(amministratore);
+		amministratore.setMenuAssociato(this);
+	}
+
+	public void rimuoviAmministratoreResponsabile(Amministratore amministratore) {
+		this.amministratoriAssociati.remove(amministratore);
+		amministratore.setMenuAssociato(null);
+	}
 
 	@Override
 	public int hashCode() {
@@ -141,7 +142,5 @@ public class Menu {
 				&& Objects.equals(ingredientiExtra, other.ingredientiExtra) && Objects.equals(pizze, other.pizze)
 				&& Objects.equals(pizzeria, other.pizzeria);
 	}
-    
-    
 
 }

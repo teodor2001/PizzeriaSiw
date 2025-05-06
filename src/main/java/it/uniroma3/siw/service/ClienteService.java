@@ -52,6 +52,6 @@ public class ClienteService {
 
     @Transactional
     public void deleteById(Long id) {
-        clienteRepository.deleteById(id);
-    }
+		clienteRepository.deleteById(id);
+	}
 }

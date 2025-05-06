@@ -31,7 +31,7 @@ public class LoginController {
         return "login";
     }
 
-    @GetMapping("/register")
+    @GetMapping("/register")	
     public String register(Model model) {
         model.addAttribute("cliente", new Cliente());
         return "register";

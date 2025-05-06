@@ -8,91 +8,96 @@ import jakarta.persistence.*;
 
 @Entity
 public class Ingrediente {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idIngrediente;
-    private String nome;
-    private double prezzo;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long idIngrediente;
+	private String nome;
+	private double prezzo;
 
-    @ManyToMany(mappedBy = "ingredientiExtra")
-    private List<Pizza> pizzeExtra = new ArrayList<>(); // Lista di pizze a cui questo ingrediente è stato aggiunto come extra
+	@ManyToMany(mappedBy = "ingredientiExtra")
+	private List<Pizza> pizzeExtra = new ArrayList<>(); // Lista di pizze a cui questo ingrediente è stato aggiunto come
+														// extra
 
-    @ManyToOne
-    @JoinColumn(name = "menu_id")
-    private Menu menu;
-    
-    //Costruttore base se no JPA si arrabbia
-    public Ingrediente() {
-    }
+	@ManyToOne
+	@JoinColumn(name = "menu_id")
+	private Menu menu;
 
-    //Costruttore vero
-    public Ingrediente(String nome, double prezzo) {
-        this.nome = nome;
-        this.prezzo = prezzo;
-    }
+	// Costruttore base se no JPA si arrabbia
+	public Ingrediente() {
+	}
 
-    // Getter e setter
+	// Costruttore vero
+	public Ingrediente(String nome, double prezzo) {
+		this.nome = nome;
+		this.prezzo = prezzo;
+	}
 
-    public Long getIdIngrediente() {
-        return idIngrediente;
-    }
+	// Getter e setter
 
-    public void setIdIngrediente(Long idIngrediente) {
-        this.idIngrediente = idIngrediente;
-    }
+	public Long getIdIngrediente() {
+		return idIngrediente;
+	}
 
-    public String getNome() {
-        return nome;
-    }
+	public void setIdIngrediente(Long idIngrediente) {
+		this.idIngrediente = idIngrediente;
+	}
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+	public String getNome() {
+		return nome;
+	}
 
-    public double getPrezzo() {
-        return prezzo;
-    }
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
 
-    public void setPrezzo(double prezzo) {
-        this.prezzo = prezzo;
-    }
+	public double getPrezzo() {
+		return prezzo;
+	}
 
-    public List<Pizza> getPizzeExtra() {
-        return pizzeExtra;
-    }
+	public void setPrezzo(double prezzo) {
+		this.prezzo = prezzo;
+	}
 
-    public void setPizzeExtra(List<Pizza> pizzeExtra) {
-        this.pizzeExtra = pizzeExtra;
-    }
+	public List<Pizza> getPizzeExtra() {
+		return pizzeExtra;
+	}
 
-    public Menu getMenu() {
-        return menu;
-    }
+	public void setPizzeExtra(List<Pizza> pizzeExtra) {
+		this.pizzeExtra = pizzeExtra;
+	}
 
-    public void setMenu(Menu menu) {
-        this.menu = menu;
-    }
+	public Menu getMenu() {
+		return menu;
+	}
 
-    public void aggiungiPizzaExtra(Pizza pizza) {
-        this.pizzeExtra.add(pizza);
-        pizza.getIngredientiExtra().add(this);
-    }
+	public void setMenu(Menu menu) {
+		this.menu = menu;
+	}
 
-    public void rimuoviPizzaExtra(Pizza pizza) {
-        this.pizzeExtra.remove(pizza);
-        pizza.getIngredientiExtra().remove(this);
-    }
+	public void aggiungiPizzaExtra(Pizza pizza) {
+		this.pizzeExtra.add(pizza);
+		pizza.getIngredientiExtra().add(this);
+	}
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Ingrediente that = (Ingrediente) o;
-        return Double.compare(that.prezzo, prezzo) == 0 && Objects.equals(idIngrediente, that.idIngrediente) && Objects.equals(nome, that.nome) && Objects.equals(pizzeExtra, that.pizzeExtra) && Objects.equals(menu, that.menu);
-    }
+	public void rimuoviPizzaExtra(Pizza pizza) {
+		this.pizzeExtra.remove(pizza);
+		pizza.getIngredientiExtra().remove(this);
+	}
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(idIngrediente, nome, prezzo, pizzeExtra, menu);
-    }
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		Ingrediente that = (Ingrediente) o;
+		return Double.compare(that.prezzo, prezzo) == 0 && Objects.equals(idIngrediente, that.idIngrediente)
+				&& Objects.equals(nome, that.nome) && Objects.equals(pizzeExtra, that.pizzeExtra)
+				&& Objects.equals(menu, that.menu);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(idIngrediente, nome, prezzo, pizzeExtra, menu);
+	}
 }

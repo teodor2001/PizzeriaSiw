@@ -2,120 +2,134 @@ package it.uniroma3.siw.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.persistence.*;
 
 @Entity
 public class Cliente {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idCliente;
-    private String nome;
-    private String cognome;
-    private String email;
-    private String password; // In produzione, questa andrebbe gestita in modo sicuro (es. hashing)
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long idCliente;
+	private String nome;
+	private String cognome;
+	private String email;
+	private String password; // In produzione, questa andrebbe gestita in modo sicuro (es. hashing)
 
-    @ManyToMany
-    @JoinTable(
-        name = "cliente_pizzeria",
-        joinColumns = @JoinColumn(name = "cliente_id"),
-        inverseJoinColumns = @JoinColumn(name = "pizzeria_id")
-    )
-    private List<Pizzeria> pizzerie = new ArrayList<>();
-    
-    @ManyToMany
-    @JoinTable(
-        name = "cliente_sconto",
-        joinColumns = @JoinColumn(name = "cliente_id"),
-        inverseJoinColumns = @JoinColumn(name = "sconto_id")
-    )
-    private List<Sconto> sconti = new ArrayList<>();
+	@ManyToMany
+	@JoinTable(name = "cliente_pizzeria", joinColumns = @JoinColumn(name = "cliente_id"), inverseJoinColumns = @JoinColumn(name = "pizzeria_id"))
+	private List<Pizzeria> pizzerie = new ArrayList<>();
 
-    //Costruttore predefinito se no JPA si arrabbia
-    public Cliente() {
-    }
+	@ManyToMany
+	@JoinTable(name = "cliente_sconto", joinColumns = @JoinColumn(name = "cliente_id"), inverseJoinColumns = @JoinColumn(name = "sconto_id"))
+	private List<Sconto> sconti = new ArrayList<>();
 
-    //Costruttore vero
-    public Cliente(String nome, String cognome, String email, String password) {
-        this.nome = nome;
-        this.cognome = cognome;
-        this.email = email;
-        this.password = password;
-    }
+	// Costruttore predefinito se no JPA si arrabbia
+	public Cliente() {
+	}
 
-    public Long getIdCliente() {
-        return idCliente;
-    }
+	// Costruttore vero
+	public Cliente(String nome, String cognome, String email, String password) {
+		this.nome = nome;
+		this.cognome = cognome;
+		this.email = email;
+		this.password = password;
+	}
 
-    public void setIdCliente(Long idCliente) {
-        this.idCliente = idCliente;
-    }
+	public Long getIdCliente() {
+		return idCliente;
+	}
 
-    public String getNome() {
-        return nome;
-    }
+	public void setIdCliente(Long idCliente) {
+		this.idCliente = idCliente;
+	}
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
+	public String getNome() {
+		return nome;
+	}
 
-    public String getCognome() {
-        return cognome;
-    }
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
 
-    public void setCognome(String cognome) {
-        this.cognome = cognome;
-    }
+	public String getCognome() {
+		return cognome;
+	}
 
-    public String getEmail() {
-        return email;
-    }
+	public void setCognome(String cognome) {
+		this.cognome = cognome;
+	}
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+	public String getEmail() {
+		return email;
+	}
 
-    public String getPassword() {
-        return password;
-    }
+	public void setEmail(String email) {
+		this.email = email;
+	}
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	public String getPassword() {
+		return password;
+	}
 
-    public List<Pizzeria> getPizzerie() {
-        return pizzerie;
-    }
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    public void setPizzerie(List<Pizzeria> pizzerie) {
-        this.pizzerie = pizzerie;
-    }
+	public List<Pizzeria> getPizzerie() {
+		return pizzerie;
+	}
 
-    public void aggiungiPizzeria(Pizzeria pizzeria) {
-        this.pizzerie.add(pizzeria);
-        pizzeria.getClienti().add(this); 
-    }
+	public void setPizzerie(List<Pizzeria> pizzerie) {
+		this.pizzerie = pizzerie;
+	}
 
-    public void rimuoviPizzeria(Pizzeria pizzeria) {
-        this.pizzerie.remove(pizzeria);
-        pizzeria.getClienti().remove(this);
-    }
-    
-    public List<Sconto> getSconti() {
-        return sconti;
-    }
+	public void aggiungiPizzeria(Pizzeria pizzeria) {
+		this.pizzerie.add(pizzeria);
+		pizzeria.getClienti().add(this);
+	}
 
-    public void setSconti(List<Sconto> sconti) {
-        this.sconti = sconti;
-    }
+	public void rimuoviPizzeria(Pizzeria pizzeria) {
+		this.pizzerie.remove(pizzeria);
+		pizzeria.getClienti().remove(this);
+	}
 
-    public void aggiungiSconto(Sconto sconto) {
-        this.sconti.add(sconto);
-        sconto.getClienti().add(this);
-    }
+	public List<Sconto> getSconti() {
+		return sconti;
+	}
 
-    public void rimuoviSconto(Sconto sconto) {
-        this.sconti.remove(sconto);
-        sconto.getClienti().remove(this);
-    }
+	public void setSconti(List<Sconto> sconti) {
+		this.sconti = sconti;
+	}
+
+	public void aggiungiSconto(Sconto sconto) {
+		this.sconti.add(sconto);
+		sconto.getClienti().add(this);
+	}
+
+	public void rimuoviSconto(Sconto sconto) {
+		this.sconti.remove(sconto);
+		sconto.getClienti().remove(this);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(cognome, email, idCliente, nome, password, pizzerie, sconti);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Cliente other = (Cliente) obj;
+		return Objects.equals(cognome, other.cognome) && Objects.equals(email, other.email)
+				&& Objects.equals(idCliente, other.idCliente) && Objects.equals(nome, other.nome)
+				&& Objects.equals(password, other.password) && Objects.equals(pizzerie, other.pizzerie)
+				&& Objects.equals(sconti, other.sconti);
+	}
+	
 }
