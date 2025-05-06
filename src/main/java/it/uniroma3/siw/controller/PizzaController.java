@@ -34,7 +34,7 @@ public class PizzaController {
 		model.addAttribute("pizzeClassiche", pizzeClassiche);
 		return "index";
 	}
-
+	
 	@GetMapping("/pizze_scontate")
 	public String showPizzeScontate(Model model) {
 		Sconto scontoQuindiciPercento = new Sconto(15.0);
