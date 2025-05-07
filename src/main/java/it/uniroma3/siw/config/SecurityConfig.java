@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,41 +15,55 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableWebSecurity
 public class SecurityConfig {
 
-	@Autowired
-	private UserDetailsServiceImpl userDetailsService;
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
 
-	@Autowired 
-	private PasswordEncoder passwordEncoder;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
-	@Bean
-	public DaoAuthenticationProvider authenticationProvider() {
-		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-		authProvider.setUserDetailsService(userDetailsService);
-		authProvider.setPasswordEncoder(passwordEncoder);
-		return authProvider;
-	}
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
+    }
 
-	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.csrf(csrf -> csrf.disable())
-				.authorizeHttpRequests(authz -> authz.requestMatchers(new AntPathRequestMatcher("/register"))
-						.permitAll().requestMatchers(new AntPathRequestMatcher("/")).permitAll()
-						.requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
-						.requestMatchers(new AntPathRequestMatcher("/css/**")).permitAll()
-						.requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
-						.requestMatchers(new AntPathRequestMatcher("/pizze_scontate")).authenticated().anyRequest()
-						.authenticated())
-				.formLogin(form -> form.loginPage("/login").successHandler((request, response, authentication) -> {
-					response.sendRedirect("/pizze_scontate"); // Reindirizza direttamente alle pizze scontate
-				}).permitAll())
-				.logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-						.logoutSuccessUrl("/login?logout").invalidateHttpSession(true).clearAuthentication(true)
-						.permitAll())
-				.authenticationProvider(authenticationProvider());
-		return http.build();
-	}
-
-	public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder);
-	}
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers(new AntPathRequestMatcher("/register")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/css/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/pizze_scontate")).authenticated()
+                        // Nuova regola per l'area amministrativa
+                        .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasRole("ADMIN")
+                        .anyRequest().authenticated()
+                )
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .successHandler((request, response, authentication) -> {
+                            // Dopo il login, reindirizza in base al ruolo
+                            if (authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+                                response.sendRedirect("/admin/dashboard");
+                            } else {
+                                response.sendRedirect("/pizze_scontate");
+                            }
+                        })
+                        .permitAll()
+                )
+                .logout(logout -> logout
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .logoutSuccessUrl("/login?logout")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .permitAll()
+                )
+                .authenticationProvider(authenticationProvider());
+        return http.build();
+    }
 }

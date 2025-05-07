@@ -1,189 +1,164 @@
 package it.uniroma3.siw.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import jakarta.persistence.*;
-
 @Entity
 public class Pizza {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
-	private Long idPizza;
-	private String nome;
-	private String descrizione;
-	private double prezzoBase;
-	@ElementCollection
-	private List<String> ingredientiBase = new ArrayList<>();
-	@ManyToOne
-	@JoinColumn(name = "sconto_id")
-	private Sconto scontoApplicato;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long idPizza;
 
-	@ManyToMany
-	@JoinTable(name = "pizza_ingrediente_extra", joinColumns = @JoinColumn(name = "pizza_id"), inverseJoinColumns = @JoinColumn(name = "ingrediente_id"))
-	private List<Ingrediente> ingredientiExtra = new ArrayList<>();
+    @NotBlank(message = "Il nome è obbligatorio")
+    private String nome;
 
-	@ManyToOne
-	@JoinColumn(name = "menu_id")
-	private Menu menu;
+    private String descrizione;
 
-	@Transient
-	private double prezzoConExtra;
-	@Transient
-	private double prezzoScontato;
+    @NotNull(message = "Il prezzo base è obbligatorio")
+    @DecimalMin(value = "0.01", message = "Il prezzo base deve essere maggiore di 0")
+    private double prezzoBase;
 
-	// Costruttore base se no JPA si arrabbia
-	public Pizza() {
-	}
+    @ManyToMany
+    @JoinTable(
+        name = "pizza_ingrediente_base",
+        joinColumns = @JoinColumn(name = "pizza_id"),
+        inverseJoinColumns = @JoinColumn(name = "ingrediente_id")
+    )
+    private List<Ingrediente> ingredientiBase = new ArrayList<>();
 
-	// Costruttore vero, senza sconti per gli utenti non loggati
-	public Pizza(String nome, String descrizione, double prezzoBase, List<String> ingredientiBase) {
-		this.nome = nome;
-		this.descrizione = descrizione;
-		this.prezzoBase = prezzoBase;
-		this.ingredientiBase = ingredientiBase;
-	}
+    @ManyToOne
+    @JoinColumn(name = "sconto_id")
+    private Sconto scontoApplicato;
 
-	// Costruttore per applicare anche gli sconti agli utenti loggati sulle pizze
-	// base
-	public Pizza(String nome, String descrizione, double prezzoBase, List<String> ingredientiBase,
-			Sconto scontoApplicato) {
-		this.nome = nome;
-		this.descrizione = descrizione;
-		this.prezzoBase = prezzoBase;
-		this.ingredientiBase = ingredientiBase;
-		this.scontoApplicato = scontoApplicato;
-	}
+    @ManyToMany
+    @JoinTable(name = "pizza_ingrediente_extra", joinColumns = @JoinColumn(name = "pizza_id"), inverseJoinColumns = @JoinColumn(name = "ingrediente_id"))
+    private List<Ingrediente> ingredientiExtra = new ArrayList<>();
 
-	// Costruttore per gestire le pizze con condimenti extra
-	public Pizza(String nome, String descrizione, double prezzoBase, List<String> ingredientiBase,
-			List<Ingrediente> ingredientiExtra) {
-		this.nome = nome;
-		this.descrizione = descrizione;
-		this.prezzoBase = prezzoBase;
-		this.ingredientiBase = ingredientiBase;
-		this.ingredientiExtra = ingredientiExtra;
-	}
+    @ManyToOne
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
 
-	// Costruttore per gestire le pizze con ingredienti extra e anche sconti per
-	// utenti loggati
-	public Pizza(String nome, String descrizione, double prezzoBase, List<String> ingredientiBase,
-			Sconto scontoApplicato, List<Ingrediente> ingredientiExtra) {
-		this.nome = nome;
-		this.descrizione = descrizione;
-		this.prezzoBase = prezzoBase;
-		this.ingredientiBase = ingredientiBase;
-		this.scontoApplicato = scontoApplicato;
-		this.ingredientiExtra = ingredientiExtra;
-	}
+    @Transient
+    private double prezzoConExtra;
+    @Transient
+    private double prezzoScontato;
 
-	public Long getIdPizza() {
-		return idPizza;
-	}
+    // Costruttori (assicurati di averli)
+    public Pizza() {
+    }
 
-	public void setIdPizza(Long idPizza) {
-		this.idPizza = idPizza;
-	}
+    public Pizza(String nome, String descrizione, double prezzoBase, List<Ingrediente> ingredientiBase) {
+        this.nome = nome;
+        this.descrizione = descrizione;
+        this.prezzoBase = prezzoBase;
+        this.ingredientiBase = ingredientiBase;
+    }
 
-	public String getNome() {
-		return nome;
-	}
 
-	public void setNome(String nome) {
-		this.nome = nome;
-	}
+    // Getter e Setter (assicurati di averli per tutti i campi annotati)
 
-	public String getDescrizione() {
-		return descrizione;
-	}
+    public Long getIdPizza() {
+        return idPizza;
+    }
 
-	public void setDescrizione(String descrizione) {
-		this.descrizione = descrizione;
-	}
+    public void setIdPizza(Long idPizza) {
+        this.idPizza = idPizza;
+    }
 
-	public double getPrezzoBase() {
-		return prezzoBase;
-	}
+    public String getNome() {
+        return nome;
+    }
 
-	public void setPrezzoBase(double prezzoBase) {
-		this.prezzoBase = prezzoBase;
-	}
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
 
-	public List<String> getIngredientiBase() {
-		return ingredientiBase;
-	}
+    public String getDescrizione() {
+        return descrizione;
+    }
 
-	public void setIngredientiBase(List<String> ingredientiBase) {
-		this.ingredientiBase = ingredientiBase;
-	}
+    public void setDescrizione(String descrizione) {
+        this.descrizione = descrizione;
+    }
 
-	public Sconto getScontoApplicato() {
-		return scontoApplicato;
-	}
+    public double getPrezzoBase() {
+        return prezzoBase;
+    }
 
-	public void setScontoApplicato(Sconto scontoApplicato) {
-		this.scontoApplicato = scontoApplicato;
-	}
+    public void setPrezzoBase(double prezzoBase) {
+        this.prezzoBase = prezzoBase;
+    }
 
-	public List<Ingrediente> getIngredientiExtra() {
-		return ingredientiExtra;
-	}
+    public List<Ingrediente> getIngredientiBase() {
+        return ingredientiBase;
+    }
 
-	public void setIngredientiExtra(List<Ingrediente> ingredientiExtra) {
-		this.ingredientiExtra = ingredientiExtra;
-	}
+    public void setIngredientiBase(List<Ingrediente> ingredientiBase) {
+        this.ingredientiBase = ingredientiBase;
+    }
 
-	public Menu getMenu() {
-		return menu;
-	}
+    public Sconto getScontoApplicato() {
+        return scontoApplicato;
+    }
 
-	public void setMenu(Menu menu) {
-		this.menu = menu;
-	}
+    public void setScontoApplicato(Sconto scontoApplicato) {
+        this.scontoApplicato = scontoApplicato;
+    }
 
-	public double getPrezzoConExtra() {
-		return prezzoBase + ingredientiExtra.stream().mapToDouble(Ingrediente::getPrezzo).sum();
-	}
+    public List<Ingrediente> getIngredientiExtra() {
+        return ingredientiExtra;
+    }
 
-	public double getPrezzoScontato() {
-		double prezzoAttuale = getPrezzoConExtra();
-		if (scontoApplicato != null) {
-			return prezzoAttuale * (1 - (scontoApplicato.getPercentuale() / 100));
-		}
-		return prezzoAttuale;
-	}
+    public void setIngredientiExtra(List<Ingrediente> ingredientiExtra) {
+        this.ingredientiExtra = ingredientiExtra;
+    }
 
-	public void aggiungiIngredienteExtra(Ingrediente ingrediente) {
-		this.ingredientiExtra.add(ingrediente);
-		ingrediente.getPizzeExtra().add(this);
-	}
+    public Menu getMenu() {
+        return menu;
+    }
 
-	public void rimuoviIngredienteExtra(Ingrediente ingrediente) {
-		this.ingredientiExtra.remove(ingrediente);
-		ingrediente.getPizzeExtra().remove(this);
-	}
+    public void setMenu(Menu menu) {
+        this.menu = menu;
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
-		Pizza pizza = (Pizza) o;
-		return Double.compare(pizza.prezzoBase, prezzoBase) == 0
-				&& Double.compare(pizza.prezzoConExtra, prezzoConExtra) == 0
-				&& Double.compare(pizza.prezzoScontato, prezzoScontato) == 0 && Objects.equals(idPizza, pizza.idPizza)
-				&& Objects.equals(nome, pizza.nome) && Objects.equals(descrizione, pizza.descrizione)
-				&& Objects.equals(ingredientiBase, pizza.ingredientiBase)
-				&& Objects.equals(scontoApplicato, pizza.scontoApplicato)
-				&& Objects.equals(ingredientiExtra, pizza.ingredientiExtra) && Objects.equals(menu, pizza.menu);
-	}
+    public double getPrezzoConExtra() {
+        return prezzoBase + ingredientiExtra.stream().mapToDouble(Ingrediente::getPrezzo).sum();
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(idPizza, nome, descrizione, prezzoBase, ingredientiBase, scontoApplicato, ingredientiExtra,
-				menu, prezzoConExtra, prezzoScontato);
-	}
+    public double getPrezzoScontato() {
+        double prezzoAttuale = getPrezzoConExtra();
+        if (scontoApplicato != null) {
+            return prezzoAttuale * (1 - (scontoApplicato.getPercentuale() / 100));
+        }
+        return prezzoAttuale;
+    }
+
+    public void aggiungiIngredienteExtra(Ingrediente ingrediente) {
+        this.ingredientiExtra.add(ingrediente);
+        ingrediente.getPizzeExtra().add(this);
+    }
+
+    public void rimuoviIngredienteExtra(Ingrediente ingrediente) {
+        this.ingredientiExtra.remove(ingrediente);
+        ingrediente.getPizzeExtra().remove(this);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pizza pizza = (Pizza) o;
+        return Double.compare(pizza.prezzoBase, prezzoBase) == 0 && Double.compare(pizza.prezzoConExtra, prezzoConExtra) == 0 && Double.compare(pizza.prezzoScontato, prezzoScontato) == 0 && Objects.equals(idPizza, pizza.idPizza) && Objects.equals(nome, pizza.nome) && Objects.equals(descrizione, pizza.descrizione) && Objects.equals(ingredientiBase, pizza.ingredientiBase) && Objects.equals(scontoApplicato, pizza.scontoApplicato) && Objects.equals(ingredientiExtra, pizza.ingredientiExtra) && Objects.equals(menu, pizza.menu);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(idPizza, nome, descrizione, prezzoBase, ingredientiBase, scontoApplicato, ingredientiExtra, menu, prezzoConExtra, prezzoScontato);
+    }
 }

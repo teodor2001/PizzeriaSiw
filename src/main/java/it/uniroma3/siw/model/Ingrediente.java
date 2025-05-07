@@ -1,103 +1,101 @@
 package it.uniroma3.siw.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import jakarta.persistence.*;
-
 @Entity
 public class Ingrediente {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long idIngrediente;
-	private String nome;
-	private double prezzo;
 
-	@ManyToMany(mappedBy = "ingredientiExtra")
-	private List<Pizza> pizzeExtra = new ArrayList<>(); // Lista di pizze a cui questo ingrediente è stato aggiunto come
-														// extra
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@ManyToOne
-	@JoinColumn(name = "menu_id")
-	private Menu menu;
+    private String nome;
+    private Double prezzo;
 
-	// Costruttore base se no JPA si arrabbia
-	public Ingrediente() {
-	}
+    @ManyToMany(mappedBy = "ingredientiExtra")
+    private List<Pizza> pizzeExtra = new ArrayList<>(); // Dichiarazione di pizzeExtra
 
-	// Costruttore vero
-	public Ingrediente(String nome, double prezzo) {
-		this.nome = nome;
-		this.prezzo = prezzo;
-	}
+    @ManyToOne
+    @JoinColumn(name = "menu_id")
+    private Menu menu;
 
-	// Getter e setter
+    public Ingrediente() {
+    }
 
-	public Long getIdIngrediente() {
-		return idIngrediente;
-	}
+    public Ingrediente(String nome, Double prezzo) {
+        this.nome = nome;
+        this.prezzo = prezzo;
+    }
 
-	public void setIdIngrediente(Long idIngrediente) {
-		this.idIngrediente = idIngrediente;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public String getNome() {
-		return nome;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setNome(String nome) {
-		this.nome = nome;
-	}
+    public String getNome() {
+        return nome;
+    }
 
-	public double getPrezzo() {
-		return prezzo;
-	}
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
 
-	public void setPrezzo(double prezzo) {
-		this.prezzo = prezzo;
-	}
+    public Double getPrezzo() {
+        return prezzo;
+    }
 
-	public List<Pizza> getPizzeExtra() {
-		return pizzeExtra;
-	}
+    public void setPrezzo(Double prezzo) {
+        this.prezzo = prezzo;
+    }
 
-	public void setPizzeExtra(List<Pizza> pizzeExtra) {
-		this.pizzeExtra = pizzeExtra;
-	}
+    public List<Pizza> getPizzeExtra() { // Getter per pizzeExtra
+        return pizzeExtra;
+    }
 
-	public Menu getMenu() {
-		return menu;
-	}
+    public void setPizzeExtra(List<Pizza> pizzeExtra) { // Setter per pizzeExtra
+        this.pizzeExtra = pizzeExtra;
+    }
 
-	public void setMenu(Menu menu) {
-		this.menu = menu;
-	}
+    public Menu getMenu() {
+        return menu;
+    }
 
-	public void aggiungiPizzaExtra(Pizza pizza) {
-		this.pizzeExtra.add(pizza);
-		pizza.getIngredientiExtra().add(this);
-	}
+    public void setMenu(Menu menu) {
+        this.menu = menu;
+    }
 
-	public void rimuoviPizzaExtra(Pizza pizza) {
-		this.pizzeExtra.remove(pizza);
-		pizza.getIngredientiExtra().remove(this);
-	}
+    public void aggiungiPizzaExtra(Pizza pizza) {
+        this.pizzeExtra.add(pizza);
+        pizza.getIngredientiExtra().add(this);
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o)
-			return true;
-		if (o == null || getClass() != o.getClass())
-			return false;
-		Ingrediente that = (Ingrediente) o;
-		return Double.compare(that.prezzo, prezzo) == 0 && Objects.equals(idIngrediente, that.idIngrediente)
-				&& Objects.equals(nome, that.nome) && Objects.equals(pizzeExtra, that.pizzeExtra)
-				&& Objects.equals(menu, that.menu);
-	}
+    public void rimuoviPizzaExtra(Pizza pizza) {
+        this.pizzeExtra.remove(pizza);
+        pizza.getIngredientiExtra().remove(this);
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(idIngrediente, nome, prezzo, pizzeExtra, menu);
-	}
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Ingrediente that = (Ingrediente) o;
+        return Objects.equals(id, that.id) && Objects.equals(nome, that.nome) && Objects.equals(prezzo, that.prezzo) && Objects.equals(pizzeExtra, that.pizzeExtra) && Objects.equals(menu, that.menu);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, nome, prezzo, pizzeExtra, menu);
+    }
 }
