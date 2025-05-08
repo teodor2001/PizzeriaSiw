@@ -10,7 +10,8 @@ import java.util.List;
 public interface PizzaRepository extends CrudRepository<Pizza, Long> {
 
     List<Pizza> findByNome(String nome);
-
+    List<Pizza> findAll();
     List<Pizza> findByPrezzoBase(double prezzoBase);
+    List<Pizza> findByScontoApplicatoIsNotNull();
 
 }
