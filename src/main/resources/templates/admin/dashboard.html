@@ -115,6 +115,31 @@
             </table>
         </div>
 
+        <h2 class="admin-heading mt-5">Gestione Bevande</h2>
+        <a th:href="@{/admin/aggiungiBevanda}" class="btn btn-success btn-add">Aggiungi Nuova Bevanda</a>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Prezzo</th>
+                        <th class="text-center">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="bevanda : ${bevande}">
+                        <td><span th:text="${bevanda.nome}"></span></td>
+                        <td><span th:text="${#numbers.formatDecimal(bevanda.prezzo, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
+                        <td class="text-center action-buttons">
+                            <a th:href="@{/admin/modificaBevanda/{id}(id=${bevanda.id})}" class="btn btn-primary btn-sm">Modifica</a>
+                            <a th:href="@{/admin/eliminaBevanda/{id}(id=${bevanda.id})}" class="btn btn-danger btn-sm">Elimina</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 

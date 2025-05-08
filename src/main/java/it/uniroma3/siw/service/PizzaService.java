@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List; // Import corretto per List
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -37,5 +37,13 @@ public class PizzaService {
     @Transactional
     public void deleteById(Long id) {
         pizzaRepository.deleteById(id);
+    }
+
+    public List<Pizza> findByNome(String nome) {
+        return pizzaRepository.findByNome(nome);
+    }
+
+    public List<Pizza> findByPrezzo(Double prezzoBase) {
+        return pizzaRepository.findByPrezzoBase(prezzoBase);
     }
 }
