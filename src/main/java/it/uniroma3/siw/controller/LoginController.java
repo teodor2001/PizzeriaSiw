@@ -2,11 +2,14 @@ package it.uniroma3.siw.controller;
 
 import it.uniroma3.siw.model.Cliente;
 import it.uniroma3.siw.service.ClienteService;
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,7 +30,7 @@ public class LoginController {
             }
             return "redirect:/";
         }
-        model.addAttribute("redirectUrl", redirectUrl); 
+        model.addAttribute("redirectUrl", redirectUrl); 	
         return "login";
     }
 
@@ -38,8 +41,16 @@ public class LoginController {
     }
 
     @PostMapping("/register")
-    public String registerCliente(@ModelAttribute("cliente") Cliente cliente) {
+    public String registerCliente(@Valid @ModelAttribute("cliente") Cliente cliente, BindingResult bindingResult, Model model) {
+        if (bindingResult.hasErrors()) {
+            return "register"; 
+        }
+
+        if (clienteService.emailAlreadyExists(cliente.getEmail())) {
+            bindingResult.rejectValue("email", "duplicate.cliente.email", "L'indirizzo email è già registrato.");
+            return "register";
+        }
         clienteService.create(cliente);
-        return "redirect:/login?registrationSuccess"; 
+        return "redirect:/login?registrationSuccess";
     }
 }

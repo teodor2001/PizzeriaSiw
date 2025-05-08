@@ -44,6 +44,9 @@ public class ClienteService {
     public List<Cliente> findAll() {
         return (List<Cliente>) clienteRepository.findAll();
     }
+    public boolean emailAlreadyExists(String email) {
+        return clienteRepository.findByEmail(email) != null;
+    }
 
     @Transactional
     public void delete(Cliente cliente) {

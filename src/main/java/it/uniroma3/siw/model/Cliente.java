@@ -5,16 +5,32 @@ import java.util.List;
 import java.util.Objects;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Cliente {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long idCliente;
-	private String nome;
-	private String cognome;
-	private String email;
-	private String password; // In produzione, questa andrebbe gestita in modo sicuro (es. hashing)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long idCliente;
+
+    @NotEmpty(message = "Il nome non può essere vuoto.")
+    @Pattern(regexp = "^[a-zA-Z]+$", message = "Il nome deve contenere solo caratteri alfabetici.")
+    private String nome;
+
+    @NotEmpty(message = "Il cognome non può essere vuoto.")
+    @Pattern(regexp = "^[a-zA-Z]+$", message = "Il cognome deve contenere solo caratteri alfabetici.")
+    private String cognome;
+
+    @NotEmpty(message = "L'email non può essere vuota.")
+    @Email(message = "Formato email non valido.")
+    private String email;
+    
+    @NotEmpty(message = "La password non può essere vuota.")
+    @Size(min = 8, message = "La password deve contenere almeno 8 caratteri.")
+    private String password;
 
 	@ManyToMany
 	@JoinTable(name = "cliente_pizzeria", joinColumns = @JoinColumn(name = "cliente_id"), inverseJoinColumns = @JoinColumn(name = "pizzeria_id"))
