@@ -31,11 +31,11 @@
 						<h5 class="card-title text-danger" th:text="${pizza.nome}">Nome Pizza</h5>
 						<p class="card-text" th:text="${pizza.descrizione}">Descrizione</p>
 						<p class="fw-bold">
-							Prezzo Originale: <s>€<span th:text="${pizza.prezzoBase}">0.00</span></s><br>
-							Prezzo Scontato: <span class="text-success">€<span
-									th:text="${pizza.getPrezzoScontato()}">0.00</span></span>
+						    Prezzo Originale: <s>€<span th:text="${pizza.prezzoBase}">0.00</span></s><br>
+						    Prezzo Scontato: <span class="text-success">€<span
+						            th:text="${#numbers.formatDecimal(pizza.getPrezzoScontato(), 0, 'COMMA', 2, 'POINT')}">0.00</span></span>
 						</p>
-						<p class="text-muted small" th:text="'Ingredienti: ' + ${pizza.ingredientiBase}">Ingredienti</p>
+						<p class="text-muted small" th:text="'Ingredienti: ' + ${pizza.ingredientiBase.![#this.nome]}">Ingredienti</p>
 					</div>
 				</div>
 			</div>
