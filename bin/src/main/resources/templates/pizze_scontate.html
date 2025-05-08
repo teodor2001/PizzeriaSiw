@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/images/LogoPizzeria.jpg" type="image/jpeg">
+    <title>Pizze Scontate - Antica Pizzeria Romana</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        .card-img-top {
+            height: 200px; /* Altezza fissa per le immagini */
+            object-fit: cover; /* Assicura che l'immagine copra l'area senza distorsioni */
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/pizze_scontate">
+                <img th:src="@{/images/LogoPizzeria.jpg}" alt="Antica Pizzeria Romana" class="logo-navbar me-2">
+                <span class="fw-bold text-white">Antica Pizzeria Romana</span>
+            </a>
+            <div class="d-flex">
+                <a class="btn btn-outline-light" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <div class="col" th:each="pizza : ${pizzeScontate}">
+                <div class="card h-100 shadow-sm pizza-card">
+                    <img th:src="@{/images/pizze/} + ${pizza.nome} + '.jpg'" class="card-img-top"
+                        alt="Immagine di " th:alt-title="${pizza.nome}">
+						<div class="card-body">
+						    <h5 class="card-title text-danger" th:text="${pizza.nome}">Nome Pizza</h5>
+						    <p class="fw-bold" th:if="${pizza.scontoApplicato != null}">
+						        Prezzo Originale: <s>€<span th:text="${pizza.prezzoBase}">0.00</span></s><br>
+						        Prezzo Scontato: <span class="text-success">€<span
+						                th:text="${#numbers.formatDecimal(pizza.getPrezzoScontato(), 0, 'COMMA', 2, 'POINT')}">0.00</span></span>
+						        <small class="text-muted ms-2" th:text="'(-' + ${pizza.scontoApplicato.percentuale} + '%)'"></small>
+						    </p>
+						    <p class="fw-bold" th:unless="${pizza.scontoApplicato != null}">
+						        Prezzo: €<span th:text="${pizza.prezzoBase}">0.00</span>
+						    </p>
+						    <p class="text-muted small"
+						        th:text="'Ingredienti: ' + ${pizza.ingredientiBase.![#this.nome]}">Ingredienti</p>
+						</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

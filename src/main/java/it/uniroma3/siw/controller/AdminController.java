@@ -50,6 +50,9 @@ public class AdminController {
 
 		List<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
 		model.addAttribute("ingredienti", tuttiGliIngredienti);
+		
+		List<Bevanda> tutteLeBevande = bevandaService.findAll();
+        model.addAttribute("bevande", tutteLeBevande);
 
 		return "admin/dashboard";
 	}

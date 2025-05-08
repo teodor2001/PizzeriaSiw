@@ -1,0 +1,56 @@
+/* src/main/resources/static/css/style.css */
+body {
+	background-color: #fff6e5;
+	font-family: 'Segoe UI', sans-serif;
+}
+
+.navbar {
+	background: #b71c1c;
+}
+
+.pizza-card {
+	border: 1px solid #f8c291;
+	transition: transform 0.2s ease-in-out;
+	background-color: #fff0e1;
+}
+
+.pizza-card:hover {
+	transform: scale(1.02);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.logo-navbar {
+	height: 4%;
+	width: 4%;
+	border-radius: 50%;
+}
+
+.btn {
+	font-size: 1em;
+	padding: 0.25rem 0.5rem;
+}
+
+.navbar-brand {
+	font-size: 2em;
+}
+
+.navbar-brand>span {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.navbar-brand>img {
+	position: relative;
+	z-index: 1;
+}
+
+.navbar-nav {
+	margin-left: auto;
+}
+
+.navbar .container-fluid {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}

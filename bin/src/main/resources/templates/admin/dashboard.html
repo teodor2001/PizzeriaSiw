@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Amministratore - Antica Pizzeria Romana</title>
+    <link rel="icon" href="/images/LogoPizzeria.jpg" type="image/jpeg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        .admin-container {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-heading {
+            color: #dc3545; /* Rosso Bootstrap */
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .table th {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-add {
+            margin-bottom: 20px;
+        }
+
+        .action-buttons a {
+            margin-right: 5px;
+        }
+
+        .menu-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="/admin/dashboard">
+                <img th:src="@{/images/LogoPizzeria.jpg}" alt="Antica Pizzeria Romana" class="logo-navbar me-2">
+                <span class="fw-bold text-white">Admin - Antica Pizzeria Romana</span>
+            </a>
+            <div class="d-flex">
+                <a class="btn btn-outline-light" href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4 admin-container">
+        <h2 class="admin-heading">Gestione Pizze</h2>
+        <a th:href="@{/admin/aggiungiPizza}" class="btn btn-success btn-add">Aggiungi Nuova Pizza</a>
+		<div class="table-responsive">
+		    <table class="table table-striped table-bordered">
+		        <thead>
+		            <tr>
+		                <th>Nome</th>
+		                <th>Prezzo Base</th>
+		                <th>Ingredienti Base</th>
+		                <th>Ingredienti Extra</th>
+		                <th class="text-center">Sconto Applicato</th>
+		                <th class="text-center">Azioni</th>
+		            </tr>
+		        </thead>
+		        <tbody>
+		            <tr th:each="pizza : ${pizze}">
+		                <td><span th:text="${pizza.nome}"></span></td>
+		                <td><span th:text="${#numbers.formatDecimal(pizza.prezzoBase, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
+		                <td>
+		                    <span th:each="ingredienteBase : ${pizza.ingredientiBase}"
+		                          th:text="${ingredienteBase.nome} + (${!ingredienteBaseStat.last} ? ', ' : '')"></span>
+		                </td>
+		                <td>
+		                    <span th:each="ingredienteExtra : ${pizza.ingredientiExtra}"
+		                          th:text="${ingredienteExtra.nome} + (${!ingredienteExtraStat.last} ? ', ' : '')"></span>
+		                </td>
+		                <td class="text-center">
+		                    <span th:if="${pizza.scontoApplicato != null}" th:text="${pizza.scontoApplicato.percentuale} + '%' "></span>
+		                    <span th:if="${pizza.scontoApplicato == null}">Nessuno</span>
+		                </td>
+		                <td class="text-center action-buttons">
+		                    <a th:href="@{/admin/modificaPizza/{id}(id=${pizza.idPizza})}" class="btn btn-primary btn-sm">Modifica</a>
+		                    <a th:href="@{/admin/eliminaPizza/{id}(id=${pizza.idPizza})}" class="btn btn-danger btn-sm">Elimina</a>
+		                </td>
+		            </tr>
+		        </tbody>
+		    </table>
+		</div>
+
+        <h2 class="admin-heading mt-5">Gestione Ingredienti</h2>
+        <a th:href="@{/admin/aggiungiIngrediente}" class="btn btn-success btn-add">Aggiungi Nuovo Ingrediente</a>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Prezzo</th>
+                        <th class="text-center">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="ingrediente : ${ingredienti}">
+                        <td><span th:text="${ingrediente.nome}"></span></td>
+                        <td><span th:text="${#numbers.formatDecimal(ingrediente.prezzo, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
+                        <td class="text-center action-buttons">
+                            <a th:href="@{/admin/modificaIngrediente/{id}(id=${ingrediente.id})}" class="btn btn-primary btn-sm">Modifica</a>
+                            <a th:href="@{/admin/eliminaIngrediente/{id}(id=${ingrediente.id})}" class="btn btn-danger btn-sm">Elimina</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="admin-heading mt-5">Gestione Bevande</h2>
+        <a th:href="@{/admin/aggiungiBevanda}" class="btn btn-success btn-add">Aggiungi Nuova Bevanda</a>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Prezzo</th>
+                        <th>Quantità</th>
+                        <th class="text-center">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="bevanda : ${bevande}">
+                        <td><span th:text="${bevanda.nome}"></span></td>
+                        <td><span th:text="${#numbers.formatDecimal(bevanda.prezzo, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
+                        <td><span th:text="${#numbers.formatDecimal(bevanda.quantità, 1, 'COMMA', 1, 'POINT')}"></span> L</td>
+                        <td class="text-center action-buttons">
+                            <a th:href="@{/admin/modificaBevanda/{id}(id=${bevanda.id})}" class="btn btn-primary btn-sm">Modifica</a>
+                            <a th:href="@{/admin/eliminaBevanda/{id}(id=${bevanda.id})}" class="btn btn-danger btn-sm">Elimina</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
