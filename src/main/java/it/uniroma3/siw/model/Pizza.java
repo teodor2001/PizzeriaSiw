@@ -49,7 +49,7 @@ public class Pizza {
     @Transient
     private double prezzoScontato;
 
-    // Costruttori (assicurati di averli)
+    // Costruttori
     public Pizza() {
     }
 
@@ -61,7 +61,6 @@ public class Pizza {
     }
 
 
-    // Getter e Setter (assicurati di averli per tutti i campi annotati)
 
     public Long getIdPizza() {
         return idPizza;

@@ -123,6 +123,7 @@
                     <tr>
                         <th>Nome</th>
                         <th>Prezzo</th>
+                        <th>Quantità</th>
                         <th class="text-center">Azioni</th>
                     </tr>
                 </thead>
@@ -130,6 +131,7 @@
                     <tr th:each="bevanda : ${bevande}">
                         <td><span th:text="${bevanda.nome}"></span></td>
                         <td><span th:text="${#numbers.formatDecimal(bevanda.prezzo, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
+                        <td><span th:text="${#numbers.formatDecimal(bevanda.quantità, 1, 'COMMA', 1, 'POINT')}"></span> L</td>
                         <td class="text-center action-buttons">
                             <a th:href="@{/admin/modificaBevanda/{id}(id=${bevanda.id})}" class="btn btn-primary btn-sm">Modifica</a>
                             <a th:href="@{/admin/eliminaBevanda/{id}(id=${bevanda.id})}" class="btn btn-danger btn-sm">Elimina</a>
