@@ -42,6 +42,7 @@
                         <input type="number" step="0.01" class="form-control" id="prezzoBase" th:field="*{prezzoBase}" required>
                         <small class="text-danger" th:if="${#fields.hasErrors('prezzoBase')}" th:errors="*{prezzoBase}"></small>
                     </div>
+					
                 </div>
             </div>
 
@@ -62,6 +63,12 @@
                     </div>
                 </div>
             </div>
+			
+			<div class="mb-3">
+			    <label for="percentualeSconto" class="form-label">Percentuale Sconto (%):</label>
+			    <input type="number" class="form-control" id="percentualeSconto" name="percentualeSconto" min="0" max="100" value="0">
+			    <small class="form-text text-muted">Inserisci la percentuale di sconto (0-100).</small>
+			</div>
 
             <button type="submit" class="btn btn-primary">Salva</button>
             <a th:href="@{/admin/dashboard}" class="btn btn-secondary">Annulla</a>

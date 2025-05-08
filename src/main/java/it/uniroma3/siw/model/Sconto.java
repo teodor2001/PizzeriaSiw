@@ -5,12 +5,17 @@ import java.util.List;
 import java.util.Objects;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Entity
 public class Sconto {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+
+	@Min(0)
+	@Max(100)
 	private double percentuale;
 
 	@OneToMany(mappedBy = "scontoApplicato")

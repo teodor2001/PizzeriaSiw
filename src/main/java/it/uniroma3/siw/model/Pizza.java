@@ -34,7 +34,7 @@ public class Pizza {
 
     @ManyToOne
     @JoinColumn(name = "sconto_id")
-    private Sconto scontoApplicato;
+    private Sconto scontoApplicato = new Sconto();
 
     @ManyToMany
     @JoinTable(name = "pizza_ingrediente_extra", joinColumns = @JoinColumn(name = "pizza_id"), inverseJoinColumns = @JoinColumn(name = "ingrediente_id"))

@@ -59,37 +59,42 @@
     <div class="container mt-4 admin-container">
         <h2 class="admin-heading">Gestione Pizze</h2>
         <a th:href="@{/admin/aggiungiPizza}" class="btn btn-success btn-add">Aggiungi Nuova Pizza</a>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Prezzo Base</th>
-                        <th>Ingredienti Base</th>
-                        <th>Ingredienti Extra</th>
-                        <th class="text-center">Azioni</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="pizza : ${pizze}">
-                        <td><span th:text="${pizza.nome}"></span></td>
-                        <td><span th:text="${#numbers.formatDecimal(pizza.prezzoBase, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
-                        <td>
-                            <span th:each="ingredienteBase : ${pizza.ingredientiBase}"
-                                  th:text="${ingredienteBase.nome} + (${!ingredienteBaseStat.last} ? ', ' : '')"></span>
-                        </td>
-                        <td>
-                            <span th:each="ingredienteExtra : ${pizza.ingredientiExtra}"
-                                  th:text="${ingredienteExtra.nome} + (${!ingredienteExtraStat.last} ? ', ' : '')"></span>
-                        </td>
-                        <td class="text-center action-buttons">
-                            <a th:href="@{/admin/modificaPizza/{id}(id=${pizza.idPizza})}" class="btn btn-primary btn-sm">Modifica</a>
-                            <a th:href="@{/admin/eliminaPizza/{id}(id=${pizza.idPizza})}" class="btn btn-danger btn-sm">Elimina</a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+		<div class="table-responsive">
+		    <table class="table table-striped table-bordered">
+		        <thead>
+		            <tr>
+		                <th>Nome</th>
+		                <th>Prezzo Base</th>
+		                <th>Ingredienti Base</th>
+		                <th>Ingredienti Extra</th>
+		                <th class="text-center">Sconto Applicato</th>
+		                <th class="text-center">Azioni</th>
+		            </tr>
+		        </thead>
+		        <tbody>
+		            <tr th:each="pizza : ${pizze}">
+		                <td><span th:text="${pizza.nome}"></span></td>
+		                <td><span th:text="${#numbers.formatDecimal(pizza.prezzoBase, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
+		                <td>
+		                    <span th:each="ingredienteBase : ${pizza.ingredientiBase}"
+		                          th:text="${ingredienteBase.nome} + (${!ingredienteBaseStat.last} ? ', ' : '')"></span>
+		                </td>
+		                <td>
+		                    <span th:each="ingredienteExtra : ${pizza.ingredientiExtra}"
+		                          th:text="${ingredienteExtra.nome} + (${!ingredienteExtraStat.last} ? ', ' : '')"></span>
+		                </td>
+		                <td class="text-center">
+		                    <span th:if="${pizza.scontoApplicato != null}" th:text="${pizza.scontoApplicato.percentuale} + '%' "></span>
+		                    <span th:if="${pizza.scontoApplicato == null}">Nessuno</span>
+		                </td>
+		                <td class="text-center action-buttons">
+		                    <a th:href="@{/admin/modificaPizza/{id}(id=${pizza.idPizza})}" class="btn btn-primary btn-sm">Modifica</a>
+		                    <a th:href="@{/admin/eliminaPizza/{id}(id=${pizza.idPizza})}" class="btn btn-danger btn-sm">Elimina</a>
+		                </td>
+		            </tr>
+		        </tbody>
+		    </table>
+		</div>
 
         <h2 class="admin-heading mt-5">Gestione Ingredienti</h2>
         <a th:href="@{/admin/aggiungiIngrediente}" class="btn btn-success btn-add">Aggiungi Nuovo Ingrediente</a>

@@ -12,20 +12,20 @@ import java.util.List;
 @Controller
 public class PizzaController {
 
-    @Autowired
-    private PizzaRepository pizzaRepository;
+	@Autowired
+	private PizzaRepository pizzaRepository;
 
-    @GetMapping("/")
-    public String showHomePage(Model model) {
-        List<Pizza> pizzeClassiche = pizzaRepository.findAll();
-        model.addAttribute("pizzeClassiche", pizzeClassiche);
-        return "index";
-    }
+	@GetMapping("/")
+	public String showHomePage(Model model) {
+		List<Pizza> pizzeClassiche = pizzaRepository.findAll();
+		model.addAttribute("pizzeClassiche", pizzeClassiche);
+		return "index";
+	}
 
-    @GetMapping("/pizze_scontate")
-    public String showPizzeScontate(Model model) {
-        List<Pizza> pizzeScontate = pizzaRepository.findByScontoApplicatoIsNotNull();
-        model.addAttribute("pizzeScontate", pizzeScontate);
-        return "pizze_scontate";
-    }
+	@GetMapping("/pizze_scontate")
+	public String showTutteLePizze(Model model) {
+		List<Pizza> tutteLePizze = pizzaRepository.findAll();
+		model.addAttribute("pizzeScontate", tutteLePizze);
+		return "pizze_scontate";
+	}
 }

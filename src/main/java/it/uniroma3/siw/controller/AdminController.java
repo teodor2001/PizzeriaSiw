@@ -4,10 +4,12 @@ import it.uniroma3.siw.model.Bevanda;
 import it.uniroma3.siw.model.Ingrediente;
 import it.uniroma3.siw.model.Menu;
 import it.uniroma3.siw.model.Pizza;
+import it.uniroma3.siw.model.Sconto;
 import it.uniroma3.siw.service.BevandaService;
 import it.uniroma3.siw.service.IngredienteService;
 import it.uniroma3.siw.service.MenuService;
 import it.uniroma3.siw.service.PizzaService;
+import it.uniroma3.siw.service.ScontoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,122 +28,133 @@ import java.util.List;
 @RequestMapping("/admin")
 public class AdminController {
 
-    @Autowired
-    private PizzaService pizzaService;
+	@Autowired
+	private PizzaService pizzaService;
 
-    @Autowired
-    private IngredienteService ingredienteService;
+	@Autowired
+	private IngredienteService ingredienteService;
 
-    @Autowired
-    private MenuService menuService;
-    
-    @Autowired
-    private BevandaService bevandaService; 
+	@Autowired
+	private MenuService menuService;
 
-    @GetMapping("/dashboard")
-    public String adminDashboard(Model model) {
-        List<Pizza> tutteLePizze = pizzaService.findAll();
-        model.addAttribute("pizze", tutteLePizze);
+	@Autowired
+	private BevandaService bevandaService;
 
-        List<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
-        model.addAttribute("ingredienti", tuttiGliIngredienti); // Aggiungi la lista degli ingredienti al model
+	@Autowired
+	private ScontoService scontoService;
 
-        return "admin/dashboard";
-    }
+	@GetMapping("/dashboard")
+	public String adminDashboard(Model model) {
+		List<Pizza> tutteLePizze = pizzaService.findAll();
+		model.addAttribute("pizze", tutteLePizze);
 
-    @GetMapping("/aggiungiPizza")
-    public String aggiungiPizzaForm(Model model) {
-        List<Ingrediente> ingredientiExtraDisponibili = ingredienteService.findAll();
-        List<Ingrediente> ingredientiBaseDisponibili = ingredienteService.findAll();
-        model.addAttribute("pizza", new Pizza());
-        model.addAttribute("ingredientiExtraDisponibili", ingredientiExtraDisponibili);
-        model.addAttribute("ingredientiBaseDisponibili", ingredientiBaseDisponibili);
-        return "admin/aggiungi_pizza";
-    }
+		List<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
+		model.addAttribute("ingredienti", tuttiGliIngredienti);
 
-    @PostMapping("/salvaPizza")
-    public String salvaPizza(@Valid @ModelAttribute("pizza") Pizza pizza,
-                             BindingResult bindingResult,
-                             @RequestParam(value = "ingredientiBase", required = false) List<Long> ingredientiBaseIds,
-                             @RequestParam(value = "ingredientiExtra", required = false) List<Long> ingredientiExtraIds,
-                             Model model) {
+		return "admin/dashboard";
+	}
 
-        if (bindingResult.hasErrors()) {
-            List<Ingrediente> ingredientiExtraDisponibili = ingredienteService.findAll();
-            List<Ingrediente> ingredientiBaseDisponibili = ingredienteService.findAll();
-            model.addAttribute("ingredientiExtraDisponibili", ingredientiExtraDisponibili);
-            model.addAttribute("ingredientiBaseDisponibili", ingredientiBaseDisponibili);
-            return "admin/aggiungi_pizza";
-        }
+	@GetMapping("/aggiungiPizza")
+	public String aggiungiPizzaForm(Model model) {
+		List<Ingrediente> ingredientiExtraDisponibili = ingredienteService.findAll();
+		List<Ingrediente> ingredientiBaseDisponibili = ingredienteService.findAll();
 
-        if (ingredientiBaseIds != null && !ingredientiBaseIds.isEmpty()) {
-            List<Ingrediente> ingredientiBase = ingredienteService.findAllById(ingredientiBaseIds);
-            pizza.setIngredientiBase(ingredientiBase);
-        } else {
-            pizza.setIngredientiBase(new ArrayList<>());
-        }
+		model.addAttribute("pizza", new Pizza());
+		model.addAttribute("ingredientiExtraDisponibili", ingredientiExtraDisponibili);
+		model.addAttribute("ingredientiBaseDisponibili", ingredientiBaseDisponibili);
 
-        if (ingredientiExtraIds != null && !ingredientiExtraIds.isEmpty()) {
-            List<Ingrediente> ingredientiExtra = ingredienteService.findAllById(ingredientiExtraIds);
-            pizza.setIngredientiExtra(ingredientiExtra);
-        } else {
-            pizza.setIngredientiExtra(new ArrayList<>());
-        }
+		return "admin/aggiungi_pizza";
+	}
 
-        Menu menu = menuService.findFirstMenu();
-        if (menu != null) {
-            pizza.setMenu(menu);
-            pizzaService.save(pizza);
-            menu.aggiungiPizza(pizza);
-            menuService.save(menu);
-            return "redirect:/admin/dashboard";
-        } else {
-            model.addAttribute("errorMessage", "Impossibile trovare il menu per aggiungere la pizza.");
-            return "admin/aggiungi_pizza";
-        }
-    }
-    
-    @GetMapping("/aggiungiIngrediente")
-    public String aggiungiIngredienteForm(Model model) {
-        model.addAttribute("ingrediente", new Ingrediente());
-        return "admin/aggiungi_ingrediente";
-    }
+	@PostMapping("/salvaPizza")
+	public String salvaPizza(@Valid @ModelAttribute("pizza") Pizza pizza, BindingResult bindingResult,
+			@RequestParam(value = "ingredientiBase", required = false) List<Long> ingredientiBaseIds,
+			@RequestParam(value = "ingredientiExtra", required = false) List<Long> ingredientiExtraIds,
+			@RequestParam(value = "percentualeSconto", required = false) Integer percentualeSconto, Model model) {
 
-    @PostMapping("/salvaIngrediente")
-    public String salvaIngrediente(@Valid @ModelAttribute("ingrediente") Ingrediente ingrediente,
-                                    BindingResult bindingResult,
-                                    Model model) {
-        if (bindingResult.hasErrors()) {
-            return "admin/aggiungi_ingrediente";
-        }
-        ingredienteService.save(ingrediente);
-        return "redirect:/admin/dashboard";
-    }
-    
-    @GetMapping("/aggiungiBevanda")
-    public String aggiungiBevandaForm(Model model) {
-        model.addAttribute("bevanda", new Bevanda());
-        return "admin/aggiungi_bevanda";
-    }
+		if (bindingResult.hasErrors()) {
+			List<Ingrediente> ingredientiExtraDisponibili = ingredienteService.findAll();
+			List<Ingrediente> ingredientiBaseDisponibili = ingredienteService.findAll();
+			model.addAttribute("ingredientiExtraDisponibili", ingredientiExtraDisponibili);
+			model.addAttribute("ingredientiBaseDisponibili", ingredientiBaseDisponibili);
+			return "admin/aggiungi_pizza";
+		}
 
-    @PostMapping("/salvaBevanda")
-    public String salvaBevanda(@Valid @ModelAttribute("bevanda") Bevanda bevanda,
-                                       BindingResult bindingResult,
-                                       Model model) {
-        if (bindingResult.hasErrors()) {
-            return "admin/aggiungi_bevanda";
-        }
+		if (ingredientiBaseIds != null && !ingredientiBaseIds.isEmpty()) {
+			List<Ingrediente> ingredientiBase = ingredienteService.findAllById(ingredientiBaseIds);
+			pizza.setIngredientiBase(ingredientiBase);
+		} else {
+			pizza.setIngredientiBase(new ArrayList<>());
+		}
 
-        Menu menu = menuService.findFirstMenu();
-        if (menu != null) {
-            bevanda.setMenu(menu);
-            bevandaService.save(bevanda);
-            menu.aggiungiBevanda(bevanda);
-            menuService.save(menu);
-            return "redirect:/admin/dashboard";
-        } else {
-            model.addAttribute("errorMessage", "Impossibile trovare il menu per aggiungere la bevanda.");
-            return "admin/aggiungi_bevanda";
-        }
-    }
+		if (ingredientiExtraIds != null && !ingredientiExtraIds.isEmpty()) {
+			List<Ingrediente> ingredientiExtra = ingredienteService.findAllById(ingredientiExtraIds);
+			pizza.setIngredientiExtra(new ArrayList<>());
+		} else {
+			pizza.setIngredientiExtra(new ArrayList<>());
+		}
+
+		if (percentualeSconto != null && percentualeSconto > 0) {
+			Sconto sconto = new Sconto();
+			sconto.setPercentuale(percentualeSconto);
+			scontoService.creaSconto(sconto);
+			pizza.setScontoApplicato(sconto);
+		} else {
+			pizza.setScontoApplicato(null);
+		}
+
+		Menu menu = menuService.findFirstMenu();
+		if (menu != null) {
+			pizza.setMenu(menu);
+			pizzaService.save(pizza);
+			menu.aggiungiPizza(pizza);
+			menuService.save(menu);
+			return "redirect:/admin/dashboard";
+		} else {
+			model.addAttribute("errorMessage", "Impossibile trovare il menu per aggiungere la pizza.");
+			return "admin/aggiungi_pizza";
+		}
+	}
+
+	@GetMapping("/aggiungiIngrediente")
+	public String aggiungiIngredienteForm(Model model) {
+		model.addAttribute("ingrediente", new Ingrediente());
+		return "admin/aggiungi_ingrediente";
+	}
+
+	@PostMapping("/salvaIngrediente")
+	public String salvaIngrediente(@Valid @ModelAttribute("ingrediente") Ingrediente ingrediente,
+			BindingResult bindingResult, Model model) {
+		if (bindingResult.hasErrors()) {
+			return "admin/aggiungi_ingrediente";
+		}
+		ingredienteService.save(ingrediente);
+		return "redirect:/admin/dashboard";
+	}
+
+	@GetMapping("/aggiungiBevanda")
+	public String aggiungiBevandaForm(Model model) {
+		model.addAttribute("bevanda", new Bevanda());
+		return "admin/aggiungi_bevanda";
+	}
+
+	@PostMapping("/salvaBevanda")
+	public String salvaBevanda(@Valid @ModelAttribute("bevanda") Bevanda bevanda, BindingResult bindingResult,
+			Model model) {
+		if (bindingResult.hasErrors()) {
+			return "admin/aggiungi_bevanda";
+		}
+
+		Menu menu = menuService.findFirstMenu();
+		if (menu != null) {
+			bevanda.setMenu(menu);
+			bevandaService.save(bevanda);
+			menu.aggiungiBevanda(bevanda);
+			menuService.save(menu);
+			return "redirect:/admin/dashboard";
+		} else {
+			model.addAttribute("errorMessage", "Impossibile trovare il menu per aggiungere la bevanda.");
+			return "admin/aggiungi_bevanda";
+		}
+	}
 }
