@@ -37,6 +37,10 @@ public class AdminController {
     public String adminDashboard(Model model) {
         List<Pizza> tutteLePizze = pizzaService.findAll();
         model.addAttribute("pizze", tutteLePizze);
+
+        List<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
+        model.addAttribute("ingredienti", tuttiGliIngredienti); // Aggiungi la lista degli ingredienti al model
+
         return "admin/dashboard";
     }
 
@@ -90,5 +94,22 @@ public class AdminController {
             model.addAttribute("errorMessage", "Impossibile trovare il menu per aggiungere la pizza.");
             return "admin/aggiungi_pizza";
         }
+    }
+    
+    @GetMapping("/aggiungiIngrediente")
+    public String aggiungiIngredienteForm(Model model) {
+        model.addAttribute("ingrediente", new Ingrediente()); // Crea un oggetto Ingrediente vuoto e lo passa al form
+        return "admin/aggiungi_ingrediente";
+    }
+
+    @PostMapping("/salvaIngrediente")
+    public String salvaIngrediente(@Valid @ModelAttribute("ingrediente") Ingrediente ingrediente,
+                                    BindingResult bindingResult,
+                                    Model model) {
+        if (bindingResult.hasErrors()) {
+            return "admin/aggiungi_ingrediente"; // In caso di errori, torna al form
+        }
+        ingredienteService.save(ingrediente);
+        return "redirect:/admin/dashboard"; // Dopo il salvataggio, reindirizza alla dashboard
     }
 }
