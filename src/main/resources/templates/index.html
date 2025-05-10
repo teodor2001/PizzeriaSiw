@@ -36,11 +36,19 @@
                 <div class="card h-100 shadow-sm pizza-card">
 					<img th:src="@{/images/pizze/{nome}.jpg(nome=${pizza.nome})}" class="card-img-top"
 					     alt="Immagine di " th:alt-title="${pizza.nome}">
-                    <div class="card-body">
-                        <h5 class="card-title text-danger" th:text="${pizza.nome}">Nome Pizza</h5>
-                        <p class="fw-bold">Prezzo: €<span th:text="${pizza.prezzoBase}">0.00</span></p>
-                        <p class="text-muted small"
-                            th:text="'Ingredienti: ' + ${pizza.ingredientiBase.![#this.nome]}">Ingredienti</p>
+						 <div class="card-body">
+						                        <h5 class="card-title text-danger" th:text="${pizza.nome}">Nome Pizza</h5>
+						                        <p class="fw-bold">Prezzo: €<span th:text="${pizza.prezzoBase}">0.00</span></p>
+						                        <p class="text-muted small">
+						                            Ingredienti: [<span th:text="${#strings.listJoin(pizza.ingredientiBase.![nome], ', ')}"></span>]
+						                        </p>
+						                        <p class="text-muted small" th:if="${not #lists.isEmpty(pizza.ingredientiExtra)}">
+						                            Extra: [+<span th:text="${#strings.listJoin(pizza.ingredientiExtra.![nome], ', ')}"></span>]
+						                        </p>
+						                        <p class="text-muted small" th:unless="${not #lists.isEmpty(pizza.ingredientiExtra)}">
+						                            Extra: [nessuno]
+						                        </p>
+						                    </div>
                     </div>
                 </div>
             </div>

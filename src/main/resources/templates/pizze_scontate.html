@@ -44,8 +44,15 @@
 						    <p class="fw-bold" th:unless="${pizza.scontoApplicato != null}">
 						        Prezzo: €<span th:text="${pizza.prezzoBase}">0.00</span>
 						    </p>
-						    <p class="text-muted small"
-						        th:text="'Ingredienti: ' + ${pizza.ingredientiBase.![#this.nome]}">Ingredienti</p>
+						    <p class="text-muted small">
+						        Ingredienti: [<span th:text="${#strings.listJoin(pizza.ingredientiBase.![nome], ', ')}"></span>]
+						    </p>
+						    <p class="text-muted small" th:if="${not #lists.isEmpty(pizza.ingredientiExtra)}">
+						        Extra: [+<span th:text="${#strings.listJoin(pizza.ingredientiExtra.![nome], ', ')}"></span>]
+						    </p>
+                            <p class="text-muted small" th:unless="${not #lists.isEmpty(pizza.ingredientiExtra)}">
+                                Extra: [nessuno]
+                            </p>
 						</div>
                 </div>
             </div>

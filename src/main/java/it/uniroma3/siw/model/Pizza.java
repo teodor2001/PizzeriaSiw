@@ -43,6 +43,8 @@ public class Pizza {
     @ManyToOne
     @JoinColumn(name = "menu_id")
     private Menu menu;
+    
+    private String imageUrl;
 
     @Transient
     private double prezzoConExtra;
@@ -58,6 +60,15 @@ public class Pizza {
         this.descrizione = descrizione;
         this.prezzoBase = prezzoBase;
         this.ingredientiBase = ingredientiBase;
+    }
+
+    
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
 

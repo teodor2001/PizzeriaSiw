@@ -21,8 +21,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +51,10 @@ public class AdminController {
 
     @Autowired
     private ScontoService scontoService;
+    
+    @Value("${upload.directory}")
+    private String uploadDirectory;
+    
 
     @GetMapping("/dashboard")
     public String adminDashboard(Model model) {
@@ -61,7 +72,7 @@ public class AdminController {
         return "admin/aggiungi_pizza";
     }
 
-    @PostMapping("/salvaPizza")
+    /*@PostMapping("/salvaPizza")
     public String salvaPizza(@Valid @ModelAttribute("pizza") Pizza pizza, BindingResult bindingResult,
                              @RequestParam(value = "ingredientiBase", required = false) List<Long> ingredientiBaseIds,
                              @RequestParam(value = "ingredientiExtra", required = false) List<Long> ingredientiExtraIds,
@@ -85,6 +96,83 @@ public class AdminController {
             pizza.setScontoApplicato(null);
         }
 
+        Menu menu = menuService.findFirstMenu();
+        if (menu != null) {
+            pizza.setMenu(menu);
+            pizzaService.save(pizza);
+            menu.aggiungiPizza(pizza);
+            menuService.save(menu);
+            return "redirect:/admin/dashboard";
+        } else {
+            model.addAttribute("errorMessage", "Impossibile trovare il menu per aggiungere la pizza.");
+            return "admin/aggiungi_pizza";
+        }
+    }*/
+    
+    @PostMapping("/salvaPizza")
+    public String salvaPizza(@Valid @ModelAttribute("pizza") Pizza pizza, BindingResult bindingResult,
+                             @RequestParam("ingredientiBaseText") String ingredientiBaseText,
+                             @RequestParam(value = "ingredientiExtraText", required = false, defaultValue = "") String ingredientiExtraText,
+                             @RequestParam("imageFile") MultipartFile imageFile,
+                             @RequestParam(value = "percentualeSconto", required = false) Integer percentualeSconto, Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
+            model.addAttribute("ingredientiBaseDisponibili", ingredienteService.findAll());
+            return "admin/aggiungi_pizza";
+        }
+
+        // Crea e associa gli ingredienti base
+        List<Ingrediente> ingredientiBaseList = new ArrayList<>();
+        Arrays.stream(ingredientiBaseText.split(","))
+                .map(String::trim)
+                .filter(nomeIngrediente -> !nomeIngrediente.isEmpty())
+                .forEach(nomeIngrediente -> {
+                    Ingrediente ingrediente = new Ingrediente();
+                    ingrediente.setNome(nomeIngrediente);
+                    ingrediente.setPrezzo(0.0);
+                    ingredienteService.save(ingrediente); // Salva l'ingrediente
+                    ingredientiBaseList.add(ingrediente);
+                });
+        pizza.setIngredientiBase(ingredientiBaseList);
+
+        // Crea e associa gli ingredienti extra
+        List<Ingrediente> ingredientiExtraList = new ArrayList<>();
+        Arrays.stream(ingredientiExtraText.split(","))
+                .map(String::trim)
+                .filter(nomeIngrediente -> !nomeIngrediente.isEmpty())
+                .forEach(nomeIngrediente -> {
+                    Ingrediente ingrediente = new Ingrediente();
+                    ingrediente.setNome(nomeIngrediente);
+                    ingrediente.setPrezzo(0.0); 
+                    ingredienteService.save(ingrediente); // Salva l'ingrediente
+                    ingredientiExtraList.add(ingrediente);
+                });
+        pizza.setIngredientiExtra(ingredientiExtraList);
+
+        if (percentualeSconto != null && percentualeSconto > 0) {
+            Sconto sconto = new Sconto();
+            sconto.setPercentuale(percentualeSconto);
+            scontoService.creaSconto(sconto);
+            pizza.setScontoApplicato(sconto);
+        } else {
+            pizza.setScontoApplicato(null);
+        }
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                String fileName = pizza.getNome().replaceAll("\\s+", "") + ".jpg";
+                Path filePath = Paths.get(uploadDirectory, fileName);
+                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                pizza.setImageUrl("/images/pizze/" + fileName);
+            } catch (IOException e) {
+                model.addAttribute("errorMessage", "Errore durante il caricamento dell'immagine.");
+                model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
+                model.addAttribute("ingredientiBaseDisponibili", ingredienteService.findAll());
+                return "admin/aggiungi_pizza";
+            }
+        } else {
+            pizza.setImageUrl("/images/pizze/Margherita.jpg");
+        }
         Menu menu = menuService.findFirstMenu();
         if (menu != null) {
             pizza.setMenu(menu);

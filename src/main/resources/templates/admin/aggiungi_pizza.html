@@ -21,7 +21,7 @@
     <div class="container mt-4">
         <h1>Aggiungi una nuova Pizza</h1>
 
-        <form action="/admin/salvaPizza" method="post" th:object="${pizza}">
+        <form action="/admin/salvaPizza" method="post" th:object="${pizza}" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -46,28 +46,29 @@
                 </div>
             </div>
 
-            <div class="mb-3">
-                <h2>Ingredienti Base:</h2>
-                <div class="row row-cols-2"> <div th:each="ingrediente : ${ingredientiBaseDisponibili}" class="form-check">
-                        <input type="checkbox" class="form-check-input" name="ingredientiBase" th:value="${ingrediente.id}" id="'ingredienteBase_' + ${ingrediente.id}">
-                        <label class="form-check-label" th:for="'ingredienteBase_' + ${ingrediente.id}" th:text="${ingrediente.nome}"></label>
-                    </div>
-                </div>
-            </div>
+			<div class="mb-3">
+			    <h2>Ingredienti Base:</h2>
+			    <label for="ingredientiBaseText" class="form-label">Inserisci gli ingredienti base (separati da virgola):</label>
+			    <input type="text" class="form-control" id="ingredientiBaseText" name="ingredientiBaseText" required>
+			    <small class="form-text text-muted">Inserisci i nomi degli ingredienti base, separati da una virgola.</small>
+			</div>
 
-            <div class="mb-3">
-                <h2>Ingredienti Extra (Opzionali):</h2>
-                <div class="row row-cols-2"> <div th:each="ingrediente : ${ingredientiExtraDisponibili}" class="form-check">
-                        <input type="checkbox" class="form-check-input" name="ingredientiExtra" th:value="${ingrediente.id}" id="'ingredienteExtra_' + ${ingrediente.id}">
-                        <label class="form-check-label" th:for="'ingredienteExtra_' + ${ingrediente.id}" th:text="${ingrediente.nome}"></label>
-                    </div>
-                </div>
-            </div>
+			<div class="mb-3">
+			    <h2>Ingredienti Extra (Opzionali):</h2>
+			    <label for="ingredientiExtraText" class="form-label">Inserisci gli ingredienti extra (separati da virgola):</label>
+			    <input type="text" class="form-control" id="ingredientiExtraText" name="ingredientiExtraText">
+			    <small class="form-text text-muted">Inserisci i nomi degli ingredienti extra (opzionali), separati da una virgola.</small>
+			</div>
 			
 			<div class="mb-3">
 			    <label for="percentualeSconto" class="form-label">Percentuale Sconto (%):</label>
 			    <input type="number" class="form-control" id="percentualeSconto" name="percentualeSconto" min="0" max="100" value="0">
 			    <small class="form-text text-muted">Inserisci la percentuale di sconto (0-100).</small>
+			</div>
+			
+			<div class="mb-3">
+			    <label for="imageFile" class="form-label">Immagine Pizza</label>
+			    <input type="file" class="form-control" id="imageFile" name="imageFile">
 			</div>
 
             <button type="submit" class="btn btn-primary">Salva</button>
