@@ -47,27 +47,17 @@ public class AdminController {
 
     @GetMapping("/dashboard")
     public String adminDashboard(Model model) {
-        List<Pizza> tutteLePizze = pizzaService.findAll();
-        model.addAttribute("pizze", tutteLePizze);
-
-        List<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
-        model.addAttribute("ingredienti", tuttiGliIngredienti);
-
-        List<Bevanda> tutteLeBevande = bevandaService.findAll();
-        model.addAttribute("bevande", tutteLeBevande);
-
+        model.addAttribute("pizze", pizzaService.findAll());
+        model.addAttribute("ingredienti", ingredienteService.findAll());
+        model.addAttribute("bevande", bevandaService.findAll());
         return "admin/dashboard";
     }
 
     @GetMapping("/aggiungiPizza")
     public String aggiungiPizzaForm(Model model) {
-        List<Ingrediente> ingredientiExtraDisponibili = ingredienteService.findAll();
-        List<Ingrediente> ingredientiBaseDisponibili = ingredienteService.findAll();
-
         model.addAttribute("pizza", new Pizza());
-        model.addAttribute("ingredientiExtraDisponibili", ingredientiExtraDisponibili);
-        model.addAttribute("ingredientiBaseDisponibili", ingredientiBaseDisponibili);
-
+        model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
+        model.addAttribute("ingredientiBaseDisponibili", ingredienteService.findAll());
         return "admin/aggiungi_pizza";
     }
 
@@ -78,26 +68,13 @@ public class AdminController {
                              @RequestParam(value = "percentualeSconto", required = false) Integer percentualeSconto, Model model) {
 
         if (bindingResult.hasErrors()) {
-            List<Ingrediente> ingredientiExtraDisponibili = ingredienteService.findAll();
-            List<Ingrediente> ingredientiBaseDisponibili = ingredienteService.findAll();
-            model.addAttribute("ingredientiExtraDisponibili", ingredientiExtraDisponibili);
-            model.addAttribute("ingredientiBaseDisponibili", ingredientiBaseDisponibili);
+            model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
+            model.addAttribute("ingredientiBaseDisponibili", ingredienteService.findAll());
             return "admin/aggiungi_pizza";
         }
 
-        if (ingredientiBaseIds != null && !ingredientiBaseIds.isEmpty()) {
-            List<Ingrediente> ingredientiBase = ingredienteService.findAllById(ingredientiBaseIds);
-            pizza.setIngredientiBase(ingredientiBase);
-        } else {
-            pizza.setIngredientiBase(new ArrayList<>());
-        }
-
-        if (ingredientiExtraIds != null && !ingredientiExtraIds.isEmpty()) {
-            List<Ingrediente> ingredientiExtra = ingredienteService.findAllById(ingredientiExtraIds);
-            pizza.setIngredientiExtra(new ArrayList<>());
-        } else {
-            pizza.setIngredientiExtra(new ArrayList<>());
-        }
+        pizza.setIngredientiBase(ingredienteService.findAllById(ingredientiBaseIds != null ? ingredientiBaseIds : new ArrayList<>()));
+        pizza.setIngredientiExtra(ingredienteService.findAllById(ingredientiExtraIds != null ? ingredientiExtraIds : new ArrayList<>()));
 
         if (percentualeSconto != null && percentualeSconto > 0) {
             Sconto sconto = new Sconto();
@@ -125,15 +102,12 @@ public class AdminController {
     public String modificaPizzaForm(@PathVariable("id") Long id, Model model) {
         Pizza pizzaDaModificare = pizzaService.findById(id);
         if (pizzaDaModificare != null) {
-            List<Ingrediente> ingredientiExtraDisponibili = ingredienteService.findAll();
-            List<Ingrediente> ingredientiBaseDisponibili = ingredienteService.findAll();
             model.addAttribute("pizza", pizzaDaModificare);
-            model.addAttribute("ingredientiExtraDisponibili", ingredientiExtraDisponibili);
-            model.addAttribute("ingredientiBaseDisponibili", ingredientiBaseDisponibili);
+            model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
+            model.addAttribute("ingredientiBaseDisponibili", ingredienteService.findAll());
             return "admin/modifica_pizza";
         } else {
-            // Gestisci il caso in cui la pizza non viene trovata
-            return "redirect:/admin/dashboard"; // Oppure una pagina di errore
+            return "redirect:/admin/dashboard";
         }
     }
 
@@ -144,30 +118,17 @@ public class AdminController {
                                      @RequestParam(value = "percentualeSconto", required = false) Float percentualeSconto, Model model) {
 
         if (bindingResult.hasErrors()) {
-            List<Ingrediente> ingredientiExtraDisponibili = ingredienteService.findAll();
-            List<Ingrediente> ingredientiBaseDisponibili = ingredienteService.findAll();
-            model.addAttribute("ingredientiExtraDisponibili", ingredientiExtraDisponibili);
-            model.addAttribute("ingredientiBaseDisponibili", ingredientiBaseDisponibili);
+            model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
+            model.addAttribute("ingredientiBaseDisponibili", ingredienteService.findAll());
             return "admin/modifica_pizza";
         }
 
-        if (ingredientiBaseIds != null && !ingredientiBaseIds.isEmpty()) {
-            List<Ingrediente> ingredientiBase = ingredienteService.findAllById(ingredientiBaseIds);
-            pizza.setIngredientiBase(ingredientiBase);
-        } else {
-            pizza.setIngredientiBase(new ArrayList<>());
-        }
-
-        if (ingredientiExtraIds != null && !ingredientiExtraIds.isEmpty()) {
-            List<Ingrediente> ingredientiExtra = ingredienteService.findAllById(ingredientiExtraIds);
-            pizza.setIngredientiExtra(new ArrayList<>());
-        } else {
-            pizza.setIngredientiExtra(new ArrayList<>());
-        }
+        pizza.setIngredientiBase(ingredienteService.findAllById(ingredientiBaseIds != null ? ingredientiBaseIds : new ArrayList<>()));
+        pizza.setIngredientiExtra(ingredienteService.findAllById(ingredientiExtraIds != null ? ingredientiExtraIds : new ArrayList<>()));
 
         if (percentualeSconto != null && percentualeSconto > 0) {
             Sconto sconto = new Sconto();
-            sconto.setPercentuale(Math.round(percentualeSconto)); // Arrotonda a un intero
+            sconto.setPercentuale(Math.round(percentualeSconto));
             scontoService.creaSconto(sconto);
             pizza.setScontoApplicato(sconto);
         } else {
@@ -177,14 +138,28 @@ public class AdminController {
         Menu menu = menuService.findFirstMenu();
         if (menu != null) {
             pizza.setMenu(menu);
-            pizzaService.save(pizza); // Il metodo save aggiornerà l'entità esistente
-            menu.aggiornaPizza(pizza); // Assicurati che questo metodo sia implementato nel tuo Menu model o MenuService
+            pizzaService.save(pizza);
+            menu.aggiornaPizza(pizza); // Assicurati che questo metodo esista in Menu o MenuService
             menuService.save(menu);
             return "redirect:/admin/dashboard";
         } else {
             model.addAttribute("errorMessage", "Impossibile trovare il menu.");
             return "admin/modifica_pizza";
         }
+    }
+
+    @PostMapping("/eliminaPizza/{id}")
+    public String eliminaPizza(@PathVariable("id") Long id) {
+        Pizza pizza = pizzaService.findById(id);
+        if (pizza != null) {
+            Menu menu = menuService.findFirstMenu();
+            if (menu != null) {
+                menu.getPizze().remove(pizza);
+                menuService.save(menu);
+            }
+            pizzaService.delete(pizza);
+        }
+        return "redirect:/admin/dashboard";
     }
 
     @GetMapping("/aggiungiIngrediente")
@@ -202,7 +177,7 @@ public class AdminController {
         ingredienteService.save(ingrediente);
         return "redirect:/admin/dashboard";
     }
-    
+
     @GetMapping("/modificaIngrediente/{id}")
     public String modificaIngredienteForm(@PathVariable("id") Long id, Model model) {
         Ingrediente ingredienteDaModificare = ingredienteService.findById(id);
@@ -210,8 +185,7 @@ public class AdminController {
             model.addAttribute("ingrediente", ingredienteDaModificare);
             return "admin/modifica_ingrediente";
         } else {
-            // Gestisci il caso in cui l'ingrediente non viene trovato
-            return "redirect:/admin/dashboard"; // Oppure una pagina di errore
+            return "redirect:/admin/dashboard";
         }
     }
 
@@ -222,6 +196,33 @@ public class AdminController {
             return "admin/modifica_ingrediente";
         }
         ingredienteService.save(ingrediente); // Il metodo save aggiornerà l'entità esistente
+        return "redirect:/admin/dashboard";
+    }
+
+    @PostMapping("/eliminaIngrediente/{id}")
+    public String eliminaIngrediente(@PathVariable("id") Long id) {
+        Ingrediente ingrediente = ingredienteService.findById(id);
+        if (ingrediente != null) {
+            // Rimuovi l'ingrediente dalle pizze che lo contengono come ingrediente base
+            List<Pizza> pizzeConIngredienteBase = pizzaService.findAll().stream()
+                    .filter(p -> p.getIngredientiBase().contains(ingrediente))
+                    .toList();
+            for (Pizza pizza : pizzeConIngredienteBase) {
+                pizza.getIngredientiBase().remove(ingrediente);
+                pizzaService.save(pizza);
+            }
+
+            // Rimuovi l'ingrediente dalle pizze che lo contengono come ingrediente extra
+            List<Pizza> pizzeConIngredienteExtra = pizzaService.findAll().stream()
+                    .filter(p -> p.getIngredientiExtra().contains(ingrediente))
+                    .toList();
+            for (Pizza pizza : pizzeConIngredienteExtra) {
+                pizza.getIngredientiExtra().remove(ingrediente);
+                pizzaService.save(pizza);
+            }
+
+            ingredienteService.deleteById(id); // Elimina l'ingrediente dal database
+        }
         return "redirect:/admin/dashboard";
     }
 
@@ -250,16 +251,14 @@ public class AdminController {
             return "admin/aggiungi_bevanda";
         }
     }
-    
+
     @GetMapping("/modificaBevanda/{id}")
     public String modificaBevandaForm(@PathVariable("id") Long id, Model model) {
         Optional<Bevanda> bevandaDaModificareOptional = bevandaService.findById(id);
         if (bevandaDaModificareOptional.isPresent()) {
-            Bevanda bevandaDaModificare = bevandaDaModificareOptional.get();
-            model.addAttribute("bevanda", bevandaDaModificare);
+            model.addAttribute("bevanda", bevandaDaModificareOptional.get());
             return "admin/modifica_bevanda";
         } else {
-            // Gestisci il caso in cui la bevanda non viene trovata
             model.addAttribute("errorMessage", "Bevanda non trovata con ID: " + id);
             return "redirect:/admin/dashboard"; // Oppure una pagina di errore più specifica
         }
@@ -272,6 +271,21 @@ public class AdminController {
             return "admin/modifica_bevanda";
         }
         bevandaService.save(bevanda); // Il metodo save aggiornerà l'entità esistente
+        return "redirect:/admin/dashboard";
+    }
+
+    @PostMapping("/eliminaBevanda/{id}")
+    public String eliminaBevanda(@PathVariable("id") Long id) {
+        Optional<Bevanda> bevandaOptional = bevandaService.findById(id);
+        if (bevandaOptional.isPresent()) {
+            Bevanda bevanda = bevandaOptional.get();
+            Menu menu = menuService.findFirstMenu();
+            if (menu != null) {
+                menu.getBevande().remove(bevanda);
+                menuService.save(menu);
+            }
+            bevandaService.delete(bevanda);
+        }
         return "redirect:/admin/dashboard";
     }
 }
