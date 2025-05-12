@@ -4,11 +4,13 @@ import it.uniroma3.siw.model.Bevanda;
 import it.uniroma3.siw.model.Ingrediente;
 import it.uniroma3.siw.model.Menu;
 import it.uniroma3.siw.model.Pizza;
+import it.uniroma3.siw.model.Pizzeria;
 import it.uniroma3.siw.model.Sconto;
 import it.uniroma3.siw.service.BevandaService;
 import it.uniroma3.siw.service.IngredienteService;
 import it.uniroma3.siw.service.MenuService;
 import it.uniroma3.siw.service.PizzaService;
+import it.uniroma3.siw.service.PizzeriaService;
 import it.uniroma3.siw.service.ScontoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +54,9 @@ public class AdminController {
     @Autowired
     private ScontoService scontoService;
     
+    @Autowired
+    private PizzeriaService pizzeriaService;
+    
     @Value("${upload.directory}")
     private String uploadDirectory;
     
@@ -61,6 +66,8 @@ public class AdminController {
         model.addAttribute("pizze", pizzaService.findAll());
         model.addAttribute("ingredienti", ingredienteService.findAll());
         model.addAttribute("bevande", bevandaService.findAll());
+        Optional<Pizzeria> pizzeriaOptional = pizzeriaService.findById(1L);
+        pizzeriaOptional.ifPresent(pizzeria -> model.addAttribute("pizzeria", pizzeria));
         return "admin/dashboard";
     }
 
