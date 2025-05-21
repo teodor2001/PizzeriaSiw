@@ -90,3 +90,67 @@ body {
 .form-group {
     margin-bottom: 15px;
 }
+
+.cart-item-details { 
+    font-size: 0.9em; 
+    color: #555; 
+}
+
+.cart-item-img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.quantity-input {
+    width: 75px !important;
+    text-align: center;
+}
+
+.cart-total-summary {
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+.action-buttons .btn {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.cart-icon-fixed {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #ff2400;
+    color: white;
+    padding: 15px;
+    border-radius: 50%;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    font-size: 1.5rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+}
+
+.cart-icon-fixed:hover {
+    background-color: #e02000;
+    color: white;
+}
+
+.cart-icon-fixed .badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.8rem;
+    padding: 0.3em 0.5em;
+}

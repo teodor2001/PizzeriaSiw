@@ -39,6 +39,9 @@ public class Cliente {
 	@ManyToMany
 	@JoinTable(name = "cliente_sconto", joinColumns = @JoinColumn(name = "cliente_id"), inverseJoinColumns = @JoinColumn(name = "sconto_id"))
 	private List<Sconto> sconti = new ArrayList<>();
+	
+    @OneToOne(mappedBy = "cliente", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Carrello carrello;
 
 	// Costruttore predefinito se no JPA si arrabbia
 	public Cliente() {
@@ -127,10 +130,21 @@ public class Cliente {
 		this.sconti.remove(sconto);
 		sconto.getClienti().remove(this);
 	}
+	
+    public Carrello getCarrello() {
+        return carrello;
+    }
+
+    public void setCarrello(Carrello carrello) {
+        this.carrello = carrello;
+        if (carrello != null) {
+            carrello.setCliente(this);
+        }
+    }
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(cognome, email, idCliente, nome, password, pizzerie, sconti);
+		return Objects.hash(carrello, cognome, email, idCliente, nome, password, pizzerie, sconti);
 	}
 
 	@Override
@@ -142,10 +156,10 @@ public class Cliente {
 		if (getClass() != obj.getClass())
 			return false;
 		Cliente other = (Cliente) obj;
-		return Objects.equals(cognome, other.cognome) && Objects.equals(email, other.email)
-				&& Objects.equals(idCliente, other.idCliente) && Objects.equals(nome, other.nome)
-				&& Objects.equals(password, other.password) && Objects.equals(pizzerie, other.pizzerie)
-				&& Objects.equals(sconti, other.sconti);
+		return Objects.equals(carrello, other.carrello) && Objects.equals(cognome, other.cognome)
+				&& Objects.equals(email, other.email) && Objects.equals(idCliente, other.idCliente)
+				&& Objects.equals(nome, other.nome) && Objects.equals(password, other.password)
+				&& Objects.equals(pizzerie, other.pizzerie) && Objects.equals(sconti, other.sconti);
 	}
-	
+
 }

@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/pizze_scontate")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasRole("ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/carrello/**")).permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

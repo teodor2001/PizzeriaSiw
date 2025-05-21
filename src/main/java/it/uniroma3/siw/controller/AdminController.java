@@ -79,56 +79,18 @@ public class AdminController {
         return "admin/aggiungi_pizza";
     }
 
-    /*@PostMapping("/salvaPizza")
-    public String salvaPizza(@Valid @ModelAttribute("pizza") Pizza pizza, BindingResult bindingResult,
-                             @RequestParam(value = "ingredientiBase", required = false) List<Long> ingredientiBaseIds,
-                             @RequestParam(value = "ingredientiExtra", required = false) List<Long> ingredientiExtraIds,
-                             @RequestParam(value = "percentualeSconto", required = false) Integer percentualeSconto, Model model) {
-
-        if (bindingResult.hasErrors()) {
-            model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
-            model.addAttribute("ingredientiBaseDisponibili", ingredienteService.findAll());
-            return "admin/aggiungi_pizza";
-        }
-
-        pizza.setIngredientiBase(ingredienteService.findAllById(ingredientiBaseIds != null ? ingredientiBaseIds : new ArrayList<>()));
-        pizza.setIngredientiExtra(ingredienteService.findAllById(ingredientiExtraIds != null ? ingredientiExtraIds : new ArrayList<>()));
-
-        if (percentualeSconto != null && percentualeSconto > 0) {
-            Sconto sconto = new Sconto();
-            sconto.setPercentuale(percentualeSconto);
-            scontoService.creaSconto(sconto);
-            pizza.setScontoApplicato(sconto);
-        } else {
-            pizza.setScontoApplicato(null);
-        }
-
-        Menu menu = menuService.findFirstMenu();
-        if (menu != null) {
-            pizza.setMenu(menu);
-            pizzaService.save(pizza);
-            menu.aggiungiPizza(pizza);
-            menuService.save(menu);
-            return "redirect:/admin/dashboard";
-        } else {
-            model.addAttribute("errorMessage", "Impossibile trovare il menu per aggiungere la pizza.");
-            return "admin/aggiungi_pizza";
-        }
-    }*/
-    
     @PostMapping("/salvaPizza")
-    public String salvaPizza(@Valid @ModelAttribute("pizza") Pizza pizza, BindingResult bindingResult,
-                             @RequestParam("ingredientiBaseText") String ingredientiBaseText,
-                             @RequestParam(value = "ingredientiExtraText", required = false, defaultValue = "") String ingredientiExtraText,
-                             @RequestParam("imageFile") MultipartFile imageFile,
-                             @RequestParam(value = "percentualeSconto", required = false) Integer percentualeSconto, Model model) {
+    public String salvaPizza(@Valid @ModelAttribute Pizza pizza, BindingResult bindingResult,
+                             @RequestParam String ingredientiBaseText,
+                             @RequestParam(required = false, defaultValue = "") String ingredientiExtraText,
+                             @RequestParam MultipartFile imageFile,
+                             @RequestParam(required = false) Integer percentualeSconto, Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
             model.addAttribute("ingredientiBaseDisponibili", ingredienteService.findAll());
             return "admin/aggiungi_pizza";
         }
 
-        // Crea e associa gli ingredienti base
         List<Ingrediente> ingredientiBaseList = new ArrayList<>();
         Arrays.stream(ingredientiBaseText.split(","))
                 .map(String::trim)
@@ -137,12 +99,10 @@ public class AdminController {
                     Ingrediente ingrediente = new Ingrediente();
                     ingrediente.setNome(nomeIngrediente);
                     ingrediente.setPrezzo(0.0);
-                    ingredienteService.save(ingrediente); // Salva l'ingrediente
+                    ingredienteService.save(ingrediente);
                     ingredientiBaseList.add(ingrediente);
                 });
         pizza.setIngredientiBase(ingredientiBaseList);
-
-        // Crea e associa gli ingredienti extra
         List<Ingrediente> ingredientiExtraList = new ArrayList<>();
         Arrays.stream(ingredientiExtraText.split(","))
                 .map(String::trim)
@@ -151,7 +111,7 @@ public class AdminController {
                     Ingrediente ingrediente = new Ingrediente();
                     ingrediente.setNome(nomeIngrediente);
                     ingrediente.setPrezzo(0.0); 
-                    ingredienteService.save(ingrediente); // Salva l'ingrediente
+                    ingredienteService.save(ingrediente);
                     ingredientiExtraList.add(ingrediente);
                 });
         pizza.setIngredientiExtra(ingredientiExtraList);
@@ -194,7 +154,7 @@ public class AdminController {
     }
 
     @GetMapping("/modificaPizza/{id}")
-    public String modificaPizzaForm(@PathVariable("id") Long id, Model model) {
+    public String modificaPizzaForm(@PathVariable Long id, Model model) {
         Pizza pizzaDaModificare = pizzaService.findById(id);
         if (pizzaDaModificare != null) {
             model.addAttribute("pizza", pizzaDaModificare);
@@ -207,10 +167,10 @@ public class AdminController {
     }
 
     @PostMapping("/salvaModifichePizza")
-    public String salvaModifichePizza(@Valid @ModelAttribute("pizza") Pizza pizza, BindingResult bindingResult,
+    public String salvaModifichePizza(@Valid @ModelAttribute Pizza pizza, BindingResult bindingResult,
                                      @RequestParam(value = "ingredientiBase", required = false) List<Long> ingredientiBaseIds,
                                      @RequestParam(value = "ingredientiExtra", required = false) List<Long> ingredientiExtraIds,
-                                     @RequestParam(value = "percentualeSconto", required = false) Float percentualeSconto, Model model) {
+                                     @RequestParam(required = false) Float percentualeSconto, Model model) {
 
         if (bindingResult.hasErrors()) {
             model.addAttribute("ingredientiExtraDisponibili", ingredienteService.findAll());
@@ -234,7 +194,7 @@ public class AdminController {
         if (menu != null) {
             pizza.setMenu(menu);
             pizzaService.save(pizza);
-            menu.aggiornaPizza(pizza); // Assicurati che questo metodo esista in Menu o MenuService
+            menu.aggiornaPizza(pizza);
             menuService.save(menu);
             return "redirect:/admin/dashboard";
         } else {
@@ -244,7 +204,7 @@ public class AdminController {
     }
 
     @PostMapping("/eliminaPizza/{id}")
-    public String eliminaPizza(@PathVariable("id") Long id) {
+    public String eliminaPizza(@PathVariable Long id) {
         Pizza pizza = pizzaService.findById(id);
         if (pizza != null) {
             Menu menu = menuService.findFirstMenu();
@@ -264,7 +224,7 @@ public class AdminController {
     }
 
     @PostMapping("/salvaIngrediente")
-    public String salvaIngrediente(@Valid @ModelAttribute("ingrediente") Ingrediente ingrediente,
+    public String salvaIngrediente(@Valid @ModelAttribute Ingrediente ingrediente,
                                     BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             return "admin/aggiungi_ingrediente";
@@ -274,7 +234,7 @@ public class AdminController {
     }
 
     @GetMapping("/modificaIngrediente/{id}")
-    public String modificaIngredienteForm(@PathVariable("id") Long id, Model model) {
+    public String modificaIngredienteForm(@PathVariable Long id, Model model) {
         Ingrediente ingredienteDaModificare = ingredienteService.findById(id);
         if (ingredienteDaModificare != null) {
             model.addAttribute("ingrediente", ingredienteDaModificare);
@@ -285,20 +245,19 @@ public class AdminController {
     }
 
     @PostMapping("/salvaModificheIngrediente")
-    public String salvaModificheIngrediente(@Valid @ModelAttribute("ingrediente") Ingrediente ingrediente,
+    public String salvaModificheIngrediente(@Valid @ModelAttribute Ingrediente ingrediente,
                                             BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             return "admin/modifica_ingrediente";
         }
-        ingredienteService.save(ingrediente); // Il metodo save aggiornerà l'entità esistente
+        ingredienteService.save(ingrediente);
         return "redirect:/admin/dashboard";
     }
 
     @PostMapping("/eliminaIngrediente/{id}")
-    public String eliminaIngrediente(@PathVariable("id") Long id) {
+    public String eliminaIngrediente(@PathVariable Long id) {
         Ingrediente ingrediente = ingredienteService.findById(id);
         if (ingrediente != null) {
-            // Rimuovi l'ingrediente dalle pizze che lo contengono come ingrediente base
             List<Pizza> pizzeConIngredienteBase = pizzaService.findAll().stream()
                     .filter(p -> p.getIngredientiBase().contains(ingrediente))
                     .toList();
@@ -307,7 +266,6 @@ public class AdminController {
                 pizzaService.save(pizza);
             }
 
-            // Rimuovi l'ingrediente dalle pizze che lo contengono come ingrediente extra
             List<Pizza> pizzeConIngredienteExtra = pizzaService.findAll().stream()
                     .filter(p -> p.getIngredientiExtra().contains(ingrediente))
                     .toList();
@@ -316,7 +274,7 @@ public class AdminController {
                 pizzaService.save(pizza);
             }
 
-            ingredienteService.deleteById(id); // Elimina l'ingrediente dal database
+            ingredienteService.deleteById(id);
         }
         return "redirect:/admin/dashboard";
     }
@@ -328,7 +286,7 @@ public class AdminController {
     }
 
     @PostMapping("/salvaBevanda")
-    public String salvaBevanda(@Valid @ModelAttribute("bevanda") Bevanda bevanda, BindingResult bindingResult,
+    public String salvaBevanda(@Valid @ModelAttribute Bevanda bevanda, BindingResult bindingResult,
                                        Model model) {
         if (bindingResult.hasErrors()) {
             return "admin/aggiungi_bevanda";
@@ -348,29 +306,29 @@ public class AdminController {
     }
 
     @GetMapping("/modificaBevanda/{id}")
-    public String modificaBevandaForm(@PathVariable("id") Long id, Model model) {
+    public String modificaBevandaForm(@PathVariable Long id, Model model) {
         Optional<Bevanda> bevandaDaModificareOptional = bevandaService.findById(id);
         if (bevandaDaModificareOptional.isPresent()) {
             model.addAttribute("bevanda", bevandaDaModificareOptional.get());
             return "admin/modifica_bevanda";
         } else {
             model.addAttribute("errorMessage", "Bevanda non trovata con ID: " + id);
-            return "redirect:/admin/dashboard"; // Oppure una pagina di errore più specifica
+            return "redirect:/admin/dashboard";
         }
     }
 
     @PostMapping("/salvaModificheBevanda")
-    public String salvaModificheBevanda(@Valid @ModelAttribute("bevanda") Bevanda bevanda,
+    public String salvaModificheBevanda(@Valid @ModelAttribute Bevanda bevanda,
                                             BindingResult bindingResult, Model model) {
         if (bindingResult.hasErrors()) {
             return "admin/modifica_bevanda";
         }
-        bevandaService.save(bevanda); // Il metodo save aggiornerà l'entità esistente
+        bevandaService.save(bevanda);
         return "redirect:/admin/dashboard";
     }
 
     @PostMapping("/eliminaBevanda/{id}")
-    public String eliminaBevanda(@PathVariable("id") Long id) {
+    public String eliminaBevanda(@PathVariable Long id) {
         Optional<Bevanda> bevandaOptional = bevandaService.findById(id);
         if (bevandaOptional.isPresent()) {
             Bevanda bevanda = bevandaOptional.get();

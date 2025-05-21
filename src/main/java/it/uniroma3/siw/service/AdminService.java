@@ -26,6 +26,4 @@ public class AdminService {
     public Amministratore findByEmail(String email) {
         return amministratoreRepository.findByEmail(email);
     }
-
-    // Puoi aggiungere altri metodi di gestione degli amministratori qui (findById, findAll, delete, ecc.)
 }
