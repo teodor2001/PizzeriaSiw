@@ -97,4 +97,33 @@ public class CarrelloController {
         }
         return "redirect:/carrello";
     }
+  
+    @PostMapping("/aggiorna-anon")
+    public String aggiornaQuantitaAnon(@RequestParam int itemIndex,
+                                     @RequestParam int quantita,
+                                     RedirectAttributes redirectAttributes) {
+        try {
+            if (quantita <= 0) {
+                 carrelloService.rimuoviElementoDalCarrelloAnon(itemIndex);
+                 redirectAttributes.addFlashAttribute("successoCarrello", "Articolo rimosso dal carrello.");
+            } else {
+                carrelloService.aggiornaQuantitaElementoAnon(itemIndex, quantita);
+                redirectAttributes.addFlashAttribute("successoCarrello", "Quantità aggiornata.");
+            }
+        } catch (Exception e) {
+             redirectAttributes.addFlashAttribute("erroreCarrello", "Impossibile aggiornare l'elemento anonimo: " + e.getMessage());
+        }
+        return "redirect:/carrello";
+    }
+
+    @PostMapping("/rimuovi-anon")
+    public String rimuoviDalCarrelloAnon(@RequestParam int itemIndex, RedirectAttributes redirectAttributes) {
+        try {
+            carrelloService.rimuoviElementoDalCarrelloAnon(itemIndex);
+            redirectAttributes.addFlashAttribute("successoCarrello", "Articolo rimosso dal carrello.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("erroreCarrello", "Impossibile rimuovere l'elemento anonimo: " + e.getMessage());
+        }
+        return "redirect:/carrello";
+    }
 }

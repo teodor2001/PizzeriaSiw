@@ -110,57 +110,63 @@ public class CarrelloService {
                 }
 
                 aggiungiElementoACarrelloSpecifico(carrelloDB, pizzaManaged,
-                                                   extraSelezionatiManaged,
-                                                   elSessione.getQuantita(), false);
+                        extraSelezionatiManaged,
+                        elSessione.getQuantita(),
+                        false,
+                        true); 
             }
             httpSession.removeAttribute(SESSION_CART_KEY);
         }
     }
 
-    private void aggiungiElementoACarrelloSpecifico(Carrello carrello, Pizza pizza, List<Ingrediente> extraSelezionati, int quantita, boolean isAnonimo) {
-        final List<Ingrediente> finalExtraSelezionati = extraSelezionati != null ? new ArrayList<>(extraSelezionati) : Collections.emptyList();
+ private void aggiungiElementoACarrelloSpecifico(Carrello carrello, Pizza pizza, List<Ingrediente> extraSelezionati,
+                                                 int quantitaDaAggiungere, boolean isAnonimo, boolean sovrascriviQuantitaSeEsiste) {
 
-        Optional<ElementoCarrello> elementoEsistenteOpt = carrello.getElementi().stream()
-                .filter(el -> el.getPizza().getIdPizza().equals(pizza.getIdPizza()) &&
-                               el.getIngredientiExtraSelezionati().size() == finalExtraSelezionati.size() &&
-                               el.getIngredientiExtraSelezionati().containsAll(finalExtraSelezionati) &&
-                               finalExtraSelezionati.containsAll(el.getIngredientiExtraSelezionati()))
-                .findFirst();
+     final List<Ingrediente> finalExtraSelezionati = extraSelezionati != null ? new ArrayList<>(extraSelezionati) : Collections.emptyList();
 
-        double prezzoBasePizzaDaUsare;
-        if (isAnonimo || pizza.getScontoApplicato() == null || pizza.getScontoApplicato().getPercentuale() == 0) {
-            prezzoBasePizzaDaUsare = pizza.getPrezzoBase();
-        } else {
-            prezzoBasePizzaDaUsare = pizza.getPrezzoScontato();
-        }
+     Optional<ElementoCarrello> elementoEsistenteOpt = carrello.getElementi().stream()
+             .filter(el -> el.getPizza().getIdPizza().equals(pizza.getIdPizza()) &&
+                            el.getIngredientiExtraSelezionati().size() == finalExtraSelezionati.size() &&
+                            el.getIngredientiExtraSelezionati().containsAll(finalExtraSelezionati) &&
+                            finalExtraSelezionati.containsAll(el.getIngredientiExtraSelezionati()))
+             .findFirst();
 
-        double costoExtra = finalExtraSelezionati.stream()
-                                  .mapToDouble(ing -> ing.getPrezzo() != null ? ing.getPrezzo() : 0.0)
-                                  .sum();
+     double prezzoBasePizzaDaUsare;
+     if (isAnonimo || pizza.getScontoApplicato() == null || pizza.getScontoApplicato().getPercentuale() == 0) {
+         prezzoBasePizzaDaUsare = pizza.getPrezzoBase();
+     } else {
+         prezzoBasePizzaDaUsare = pizza.getPrezzoScontato();
+     }
 
-        double prezzoUnitarioFinale = prezzoBasePizzaDaUsare + costoExtra;
+     double costoExtra = finalExtraSelezionati.stream()
+                               .mapToDouble(ing -> ing.getPrezzo() != null ? ing.getPrezzo() : 0.0)
+                               .sum();
+     double prezzoUnitarioFinale = prezzoBasePizzaDaUsare + costoExtra;
 
+     if (elementoEsistenteOpt.isPresent()) {
+         ElementoCarrello el = elementoEsistenteOpt.get();
+         if (sovrascriviQuantitaSeEsiste) {
+             el.setQuantita(quantitaDaAggiungere);
+         } else {
+             el.setQuantita(el.getQuantita() + quantitaDaAggiungere);
+         }
+         el.setPrezzoUnitarioCalcolato(prezzoUnitarioFinale);
+         if (!isAnonimo) {
+              elementoCarrelloRepository.save(el);
+         }
+     } else {
+         ElementoCarrello nuovoElemento = new ElementoCarrello();
+         nuovoElemento.setPizza(pizza);
+         nuovoElemento.setIngredientiExtraSelezionati(finalExtraSelezionati);
+         nuovoElemento.setQuantita(quantitaDaAggiungere);
+         nuovoElemento.setPrezzoUnitarioCalcolato(prezzoUnitarioFinale);
 
-        if (elementoEsistenteOpt.isPresent()) {
-            ElementoCarrello el = elementoEsistenteOpt.get();
-            el.setQuantita(el.getQuantita() + quantita);
-            el.setPrezzoUnitarioCalcolato(prezzoUnitarioFinale);
-            if (!isAnonimo) {
-                 elementoCarrelloRepository.save(el);
-            }
-        } else {
-            ElementoCarrello nuovoElemento = new ElementoCarrello();
-            nuovoElemento.setPizza(pizza);
-            nuovoElemento.setIngredientiExtraSelezionati(finalExtraSelezionati);
-            nuovoElemento.setQuantita(quantita);
-            nuovoElemento.setPrezzoUnitarioCalcolato(prezzoUnitarioFinale);
-
-            carrello.aggiungiElemento(nuovoElemento);
-             if (!isAnonimo) {
-                elementoCarrelloRepository.save(nuovoElemento);
-            }
-        }
-    }
+         carrello.aggiungiElemento(nuovoElemento);
+          if (!isAnonimo) {
+             elementoCarrelloRepository.save(nuovoElemento);
+         }
+     }
+ }
 
 
     @Transactional
@@ -183,7 +189,7 @@ public class CarrelloService {
         List<Ingrediente> extraSelezionati = (idsIngredientiExtraSelezionati != null && !idsIngredientiExtraSelezionati.isEmpty()) ?
                 ingredienteRepository.findAllById(idsIngredientiExtraSelezionati) : Collections.emptyList();
 
-        aggiungiElementoACarrelloSpecifico(carrello, pizza, extraSelezionati, quantita, isAnonimo);
+        aggiungiElementoACarrelloSpecifico(carrello, pizza, extraSelezionati, quantita, isAnonimo, false);
 
         carrello.setDataUltimaModifica(LocalDateTime.now());
 
@@ -287,5 +293,36 @@ public class CarrelloService {
             httpSession.setAttribute(SESSION_CART_KEY, carrello);
             return carrello;
         }
+    }
+
+    @Transactional
+    public Carrello aggiornaQuantitaElementoAnon(int itemIndex, int nuovaQuantita) {
+        Carrello carrello = getCarrelloCorrente(); 
+        if (getUtenteLoggatoSePresente() != null) {
+            throw new IllegalStateException("Operazione non permessa per utenti loggati. Usare aggiornaQuantitaElemento.");
+        }
+        if (itemIndex < 0 || carrello.getElementi() == null || itemIndex >= carrello.getElementi().size()) {
+            throw new IllegalArgumentException("Indice articolo non valido: " + itemIndex);
+        }
+
+        ElementoCarrello elementoDaAggiornare = carrello.getElementi().get(itemIndex);
+        elementoDaAggiornare.setQuantita(nuovaQuantita);
+        httpSession.setAttribute(SESSION_CART_KEY, carrello); 
+        return carrello;
+    }
+
+    @Transactional
+    public Carrello rimuoviElementoDalCarrelloAnon(int itemIndex) {
+        Carrello carrello = getCarrelloCorrente(); 
+        if (getUtenteLoggatoSePresente() != null) {
+            throw new IllegalStateException("Operazione non permessa per utenti loggati. Usare rimuoviElementoDalCarrello.");
+        }
+        if (itemIndex < 0 || carrello.getElementi() == null || itemIndex >= carrello.getElementi().size()) {
+            throw new IllegalArgumentException("Indice articolo non valido: " + itemIndex);
+        }
+
+        carrello.getElementi().remove(itemIndex);
+        httpSession.setAttribute(SESSION_CART_KEY, carrello); 
+        return carrello;
     }
 }

@@ -39,7 +39,8 @@
 						<span th:if="${clienteAttuale != null}" th:text="${clienteAttuale.nome}"></span>
 						<span th:if="${clienteAttuale == null && oauthUserDisplayName != null}" th:text="${oauthUserDisplayName}"></span>
 						<span th:if="${clienteAttuale == null && oauthUserDisplayName == null && #authentication.getPrincipal() instanceof T(org.springframework.security.oauth2.core.user.OAuth2User)}"
-						      th:text="${#authentication.getPrincipal().getAttribute('name')}"></span> <span th:if="${clienteAttuale == null && oauthUserDisplayName == null && !(#authentication.getPrincipal() instanceof T(org.springframework.security.oauth2.core.user.OAuth2User)) && #authentication.name != null && #authentication.name != 'anonymousUser'}"
+						      th:text="${#authentication.getPrincipal().getAttribute('name')}"></span>
+                        <span th:if="${clienteAttuale == null && oauthUserDisplayName == null && !(#authentication.getPrincipal() instanceof T(org.springframework.security.oauth2.core.user.OAuth2User)) && #authentication.name != null && #authentication.name != 'anonymousUser'}"
 						      th:text="${#authentication.name}"></span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownUserAuthenticated">
@@ -92,7 +93,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="elemento : ${carrello.elementi}" class="align-middle">
+                        <tr th:each="elemento, iterStat : ${carrello.elementi}" class="align-middle">
                             <td>
                                 <img th:if="${elemento.pizza.imageUrl != null}" th:src="@{${elemento.pizza.imageUrl}}"
                                      class="cart-item-img" alt="Immagine Pizza">
@@ -109,22 +110,32 @@
                                 </div>
                             </td>
                             <td class="text-center">
-                                <form th:action="@{/carrello/aggiorna/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})}" method="post" class="d-inline-flex align-items-center">
+                                <form th:if="${not #lists.isEmpty(carrello.elementi)}"
+                                      th:with="actionUrlUserAggiorna=@{/carrello/aggiorna/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})},
+                                                 actionUrlAnonAggiorna=@{/carrello/aggiorna-anon}"
+                                      th:action="${(#authentication.principal != 'anonymousUser') ? actionUrlUserAggiorna : actionUrlAnonAggiorna}"
+                                      method="post" class="d-inline-flex align-items-center">
                                     <input type="number" name="quantita" th:value="${elemento.quantita}" min="1" max="99" class="form-control form-control-sm quantity-input">
+                                    <input th:if="${#authentication.principal == 'anonymousUser'}" type="hidden" name="itemIndex" th:value="${iterStat.index}" />
                                     <button type="submit" class="btn btn-outline-primary btn-sm ms-1" title="Aggiorna quantità">
                                         <i class="bi bi-check-lg"></i>
                                     </button>
                                 </form>
-                            </td>
+                                </td>
                             <td class="text-end" th:text="${#numbers.formatDecimal(elemento.prezzoUnitarioCalcolato, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
                             <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(elemento.getPrezzoTotaleElemento(), 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
                             <td class="text-center">
-                                <form th:action="@{/carrello/rimuovi/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})}" method="post">
+                                 <form th:if="${not #lists.isEmpty(carrello.elementi)}"
+                                      th:with="actionUrlUserRimuovi=@{/carrello/rimuovi/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})},
+                                                 actionUrlAnonRimuovi=@{/carrello/rimuovi-anon}"
+                                      th:action="${(#authentication.principal != 'anonymousUser') ? actionUrlUserRimuovi : actionUrlAnonRimuovi}"
+                                       method="post">
+                                    <input th:if="${#authentication.principal == 'anonymousUser'}" type="hidden" name="itemIndex" th:value="${iterStat.index}" />
                                     <button type="submit" class="btn btn-outline-danger btn-sm" title="Rimuovi dal carrello">
                                         <i class="bi bi-trash3"></i>
                                     </button>
                                 </form>
-                            </td>
+                                </td>
                         </tr>
                     </tbody>
                 </table>
@@ -187,4 +198,4 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>
+</html>	
