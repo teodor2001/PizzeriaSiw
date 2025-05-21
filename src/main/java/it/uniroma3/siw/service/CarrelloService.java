@@ -1,10 +1,12 @@
 package it.uniroma3.siw.service;
 
+import it.uniroma3.siw.model.Bevanda;
 import it.uniroma3.siw.model.Carrello;
 import it.uniroma3.siw.model.Cliente;
 import it.uniroma3.siw.model.ElementoCarrello;
 import it.uniroma3.siw.model.Pizza;
 import it.uniroma3.siw.model.Ingrediente;
+import it.uniroma3.siw.repository.BevandaRepository;
 import it.uniroma3.siw.repository.CarrelloRepository;
 import it.uniroma3.siw.repository.ElementoCarrelloRepository;
 import it.uniroma3.siw.repository.PizzaRepository;
@@ -33,6 +35,9 @@ public class CarrelloService {
 
     @Autowired
     private PizzaRepository pizzaRepository;
+    
+    @Autowired 
+    private BevandaRepository bevandaRepository;
 
     @Autowired
     private IngredienteRepository ingredienteRepository;
@@ -92,40 +97,52 @@ public class CarrelloService {
         if (carrelloSessione != null && !carrelloSessione.getElementi().isEmpty()) {
             List<ElementoCarrello> elementiSessione = new ArrayList<>(carrelloSessione.getElementi());
             for (ElementoCarrello elSessione : elementiSessione) {
-                Pizza pizzaDaSessione = elSessione.getPizza();
+                if (elSessione.getPizza() != null) { // Se è una pizza
+                    Pizza pizzaDaSessione = elSessione.getPizza();
 
-                Pizza pizzaManaged = pizzaRepository.findById(pizzaDaSessione.getIdPizza())
-                                       .orElseThrow(() -> new IllegalArgumentException("Pizza non trovata con ID: " + pizzaDaSessione.getIdPizza()));
+                    Pizza pizzaManaged = pizzaRepository.findById(pizzaDaSessione.getIdPizza())
+                                           .orElseThrow(() -> new IllegalArgumentException("Pizza non trovata con ID: " + pizzaDaSessione.getIdPizza()));
 
-                Hibernate.initialize(pizzaManaged.getIngredientiExtra());
+                    Hibernate.initialize(pizzaManaged.getIngredientiExtra());
 
-                List<Ingrediente> extraSelezionatiManaged = new ArrayList<>();
-                if (elSessione.getIngredientiExtraSelezionati() != null && !elSessione.getIngredientiExtraSelezionati().isEmpty()) {
-                    List<Long> extraIds = elSessione.getIngredientiExtraSelezionati().stream()
-                                                    .map(Ingrediente::getId)
-                                                    .collect(Collectors.toList());
-                    if (!extraIds.isEmpty()) {
-                       extraSelezionatiManaged.addAll(ingredienteRepository.findAllById(extraIds));
+                    List<Ingrediente> extraSelezionatiManaged = new ArrayList<>();
+                    if (elSessione.getIngredientiExtraSelezionati() != null && !elSessione.getIngredientiExtraSelezionati().isEmpty()) {
+                        List<Long> extraIds = elSessione.getIngredientiExtraSelezionati().stream()
+                                                        .map(Ingrediente::getId)
+                                                        .collect(Collectors.toList());
+                        if (!extraIds.isEmpty()) {
+                           extraSelezionatiManaged.addAll(ingredienteRepository.findAllById(extraIds));
+                        }
                     }
-                }
 
-                aggiungiElementoACarrelloSpecifico(carrelloDB, pizzaManaged,
-                        extraSelezionatiManaged,
-                        elSessione.getQuantita(),
-                        false,
-                        true); 
+                    aggiungiElementoACarrelloSpecifico(carrelloDB, pizzaManaged,
+                            extraSelezionatiManaged,
+                            elSessione.getQuantita(),
+                            false,
+                            true); 
+                } else if (elSessione.getBevanda() != null) { // Se è una bevanda
+                    Bevanda bevandaDaSessione = elSessione.getBevanda();
+                    Bevanda bevandaManaged = bevandaRepository.findById(bevandaDaSessione.getId())
+                                            .orElseThrow(() -> new IllegalArgumentException("Bevanda non trovata con ID: " + bevandaDaSessione.getId()));
+                    aggiungiElementoACarrelloSpecifico(carrelloDB, bevandaManaged, elSessione.getQuantita(), false, true);
+                }
             }
             httpSession.removeAttribute(SESSION_CART_KEY);
         }
     }
 
- private void aggiungiElementoACarrelloSpecifico(Carrello carrello, Pizza pizza, List<Ingrediente> extraSelezionati,
+    // Metodo generico riadattato per accogliere sia Pizze che Bevande
+    // Ora è più utile avere due metodi distinti o un metodo con overloading.
+    // Per semplicità e chiarezza, creeremo un metodo per bevande e manterremo quello per pizze.
+    // Il metodo per pizze è già 'aggiungiElementoACarrelloSpecifico(Carrello carrello, Pizza pizza, ...)'
+
+    private void aggiungiElementoACarrelloSpecifico(Carrello carrello, Pizza pizza, List<Ingrediente> extraSelezionati,
                                                  int quantitaDaAggiungere, boolean isAnonimo, boolean sovrascriviQuantitaSeEsiste) {
 
      final List<Ingrediente> finalExtraSelezionati = extraSelezionati != null ? new ArrayList<>(extraSelezionati) : Collections.emptyList();
 
      Optional<ElementoCarrello> elementoEsistenteOpt = carrello.getElementi().stream()
-             .filter(el -> el.getPizza().getIdPizza().equals(pizza.getIdPizza()) &&
+             .filter(el -> el.getPizza() != null && el.getPizza().getIdPizza().equals(pizza.getIdPizza()) && // Aggiunto controllo per pizza non null
                             el.getIngredientiExtraSelezionati().size() == finalExtraSelezionati.size() &&
                             el.getIngredientiExtraSelezionati().containsAll(finalExtraSelezionati) &&
                             finalExtraSelezionati.containsAll(el.getIngredientiExtraSelezionati()))
@@ -156,7 +173,7 @@ public class CarrelloService {
          }
      } else {
          ElementoCarrello nuovoElemento = new ElementoCarrello();
-         nuovoElemento.setPizza(pizza);
+         nuovoElemento.setPizza(pizza); // Ora impostiamo la pizza
          nuovoElemento.setIngredientiExtraSelezionati(finalExtraSelezionati);
          nuovoElemento.setQuantita(quantitaDaAggiungere);
          nuovoElemento.setPrezzoUnitarioCalcolato(prezzoUnitarioFinale);
@@ -167,6 +184,40 @@ public class CarrelloService {
          }
      }
  }
+
+    // Nuovo metodo sovraccaricato per aggiungere bevande al carrello specifico
+    private void aggiungiElementoACarrelloSpecifico(Carrello carrello, Bevanda bevanda,
+                                                 int quantitaDaAggiungere, boolean isAnonimo, boolean sovrascriviQuantitaSeEsiste) {
+
+        Optional<ElementoCarrello> elementoEsistenteOpt = carrello.getElementi().stream()
+                .filter(el -> el.getBevanda() != null && el.getBevanda().getId().equals(bevanda.getId()) && el.getIngredientiExtraSelezionati().isEmpty()) // Controllo per bevanda e nessun extra
+                .findFirst();
+
+        double prezzoUnitarioFinale = bevanda.getPrezzo();
+
+        if (elementoEsistenteOpt.isPresent()) {
+            ElementoCarrello el = elementoEsistenteOpt.get();
+            if (sovrascriviQuantitaSeEsiste) {
+                el.setQuantita(quantitaDaAggiungere);
+            } else {
+                el.setQuantita(el.getQuantita() + quantitaDaAggiungere);
+            }
+            el.setPrezzoUnitarioCalcolato(prezzoUnitarioFinale);
+            if (!isAnonimo) {
+                elementoCarrelloRepository.save(el);
+            }
+        } else {
+            ElementoCarrello nuovoElemento = new ElementoCarrello();
+            nuovoElemento.setBevanda(bevanda); // Impostiamo la bevanda
+            nuovoElemento.setQuantita(quantitaDaAggiungere);
+            nuovoElemento.setPrezzoUnitarioCalcolato(prezzoUnitarioFinale);
+
+            carrello.aggiungiElemento(nuovoElemento);
+            if (!isAnonimo) {
+                elementoCarrelloRepository.save(nuovoElemento);
+            }
+        }
+    }
 
 
     @Transactional
@@ -201,6 +252,31 @@ public class CarrelloService {
         }
     }
 
+    // Nuovo metodo per aggiungere una bevanda al carrello
+    @Transactional
+    public Carrello aggiungiBevandaAlCarrello(Long bevandaId, int quantita) {
+        if (quantita <= 0) {
+            throw new IllegalArgumentException("La quantità deve essere maggiore di zero.");
+        }
+
+        Carrello carrello = getCarrelloCorrente();
+        boolean isAnonimo = (getUtenteLoggatoSePresente() == null);
+
+        Bevanda bevanda = bevandaRepository.findById(bevandaId)
+                .orElseThrow(() -> new IllegalArgumentException("Bevanda non trovata con ID: " + bevandaId));
+
+        aggiungiElementoACarrelloSpecifico(carrello, bevanda, quantita, isAnonimo, false);
+
+        carrello.setDataUltimaModifica(LocalDateTime.now());
+
+        if (!isAnonimo) {
+            return carrelloRepository.save(carrello);
+        } else {
+            httpSession.setAttribute(SESSION_CART_KEY, carrello);
+            return carrello;
+        }
+    }
+
     @Transactional
     public Carrello rimuoviElementoDalCarrello(Long elementoCarrelloId) {
         Carrello carrello = getCarrelloCorrente();
@@ -208,11 +284,13 @@ public class CarrelloService {
 
         Optional<ElementoCarrello> elOpt = carrello.getElementi().stream()
             .filter(e -> {
+                // Per gli elementi anonimi, l'ID è un hash temporaneo, non l'ID del DB.
+                // Dobbiamo distinguere se l'elemento è una pizza o una bevanda per un confronto più accurato se necessario,
+                // ma per la rimozione basata sull'ID temporaneo o persistente, la logica attuale dovrebbe funzionare.
                 if (!isAnonimo) return elementoCarrelloId.equals(e.getId());
                 return elementoCarrelloId.equals(System.identityHashCode(e));
             })
             .findFirst();
-
 
         if (elOpt.isPresent()) {
             ElementoCarrello elementoDaRimuovere = elOpt.get();
@@ -226,7 +304,6 @@ public class CarrelloService {
                  carrello.getElementi().remove(elementoDaRimuovere);
             }
         }
-
 
         carrello.setDataUltimaModifica(LocalDateTime.now());
         if (!isAnonimo) {
@@ -260,6 +337,9 @@ public class CarrelloService {
                 carrello.getElementi().remove(elementoDaAggiornare);
             } else {
                 elementoDaAggiornare.setQuantita(nuovaQuantita);
+                // Ricalcola il prezzo unitario dopo l'aggiornamento della quantità,
+                // anche se la quantità non influenza il prezzo unitario, è buona prassi assicurarsi che sia aggiornato.
+                elementoDaAggiornare.calcolaPrezzoUnitario(); 
                 if(!isAnonimo) elementoCarrelloRepository.save(elementoDaAggiornare);
             }
         }
@@ -272,7 +352,7 @@ public class CarrelloService {
             return carrello;
         }
     }
-
+    
     @Transactional
     public Carrello svuotaCarrello() {
         Carrello carrello = getCarrelloCorrente();

@@ -66,9 +66,8 @@
 						        Ingredienti Base: [<span th:text="${#strings.listJoin(pizza.ingredientiBase.![nome], ', ')}"></span>]
 						    </p>
 
-						    <form th:action="@{/carrello/aggiungi}" method="post" class="mt-3">
-						        <input type="hidden" name="pizzaId" th:value="${pizza.idPizza}" />
-						        
+						    <form th:action="@{/carrello/aggiungiPizza}" method="post" class="mt-3"> <input type="hidden" name="pizzaId" th:value="${pizza.idPizza}" />
+
 						        <div class="mb-2">
 						            <label for="quantita" class="form-label form-label-sm">Quantità:</label>
 						            <input type="number" name="quantita" value="1" min="1" class="form-control form-control-sm d-inline-block" style="width: 80px;"/>
@@ -86,7 +85,7 @@
 						                </div>
 						            </div>
 						        </div>
-						        
+
 						        <button type="submit" class="btn btn-warning btn-sm mt-2 w-100">
 						            <i class="bi bi-cart-plus"></i> Aggiungi al Carrello </button>
 						    </form>
@@ -101,9 +100,19 @@
                 <div class="card h-100 shadow-sm bevanda-card">
                     <div class="card-body">
                         <h5 class="card-title text-danger" th:text="${bevanda.nome}">Nome Bevanda</h5>
-                        <p class="fw-bold">Prezzo: €<span th:text="${bevanda.prezzo}">0.00</span></p>
-                        <p class="text-muted small">Quantità: <span th:text="${#numbers.formatDecimal(bevanda.quantità, 0, 'COMMA', 1, 'POINT')}">0.0</span> L</p>
-                    </div>
+                        <p class="fw-bold">Prezzo: €<span th:text="${#numbers.formatDecimal(bevanda.prezzo, 0, 'COMMA', 2, 'POINT')}">0.00</span></p> <p class="text-muted small">Quantità: <span th:text="${#numbers.formatDecimal(bevanda.quantità, 0, 'COMMA', 1, 'POINT')}">0.0</span> L</p>
+
+                        <form th:action="@{/carrello/aggiungiBevanda}" method="post" class="mt-3">
+                            <input type="hidden" name="bevandaId" th:value="${bevanda.id}" />
+                            <div class="mb-2">
+                                <label for="quantitaBevanda" class="form-label form-label-sm">Quantità:</label>
+                                <input type="number" name="quantita" value="1" min="1" class="form-control form-control-sm d-inline-block" style="width: 80px;"/>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-sm mt-2 w-100">
+                                <i class="bi bi-cart-plus"></i> Aggiungi al Carrello
+                            </button>
+                        </form>
+                        </div>
                 </div>
             </div>
         </div>
@@ -114,8 +123,7 @@
                 <div class="card h-100 shadow-sm ingrediente-card">
                     <div class="card-body">
                         <h5 class="card-title text-danger" th:text="${ingredienteExtra.nome}">Nome Ingrediente</h5>
-                        <p class="fw-bold">Prezzo: €<span th:text="${ingredienteExtra.prezzo}">0.00</span></p>
-                    </div>
+                        <p class="fw-bold">Prezzo: €<span th:text="${#numbers.formatDecimal(ingredienteExtra.prezzo, 0, 'COMMA', 2, 'POINT')}">0.00</span></p> </div>
                 </div>
             </div>
         </div>

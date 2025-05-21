@@ -16,9 +16,16 @@ public class ElementoCarrello {
     @JoinColumn(name = "carrello_id", nullable = false)
     private Carrello carrello;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "pizza_id", nullable = false)
+    // MODIFICA QUI: Rimuovi optional = false e nullable = false per permettere che sia null
+    // Un ElementoCarrello può ora avere una Pizza OPPURE una Bevanda.
+    @ManyToOne
+    @JoinColumn(name = "pizza_id", nullable = true)
     private Pizza pizza;
+
+    // NUOVO CAMPO: Aggiungi questo per la bevanda
+    @ManyToOne
+    @JoinColumn(name = "bevanda_id")
+    private Bevanda bevanda;
 
     private int quantita;
 
@@ -37,6 +44,8 @@ public class ElementoCarrello {
         this.quantita = 1;
     }
 
+    // --- Getter e Setter standard per i campi esistenti ---
+
     public Long getId() {
         return id;
     }
@@ -51,14 +60,6 @@ public class ElementoCarrello {
 
     public void setCarrello(Carrello carrello) {
         this.carrello = carrello;
-    }
-
-    public Pizza getPizza() {
-        return pizza;
-    }
-
-    public void setPizza(Pizza pizza) {
-        this.pizza = pizza;
     }
 
     public int getQuantita() {
@@ -85,49 +86,84 @@ public class ElementoCarrello {
         this.prezzoUnitarioCalcolato = prezzoUnitarioCalcolato;
     }
 
-    public double getPrezzoTotaleElemento() {
-        return this.quantita * this.prezzoUnitarioCalcolato;
+    // Getter e Setter per Pizza (assicurati che siano presenti, se non usi Lombok)
+    public Pizza getPizza() {
+        return pizza;
     }
-    
 
+    public void setPizza(Pizza pizza) {
+        this.pizza = pizza;
+    }
+
+    // NUOVI Getter e Setter per Bevanda
+    public Bevanda getBevanda() {
+        return bevanda;
+    }
+
+    public void setBevanda(Bevanda bevanda) {
+        this.bevanda = bevanda;
+    }
+
+    // MODIFICA QUI: Aggiorna il calcolo del prezzo unitario per gestire sia pizze che bevande
     public void calcolaPrezzoUnitario() {
-        double prezzoExtra = 0;
-        if (this.pizza != null && this.ingredientiExtraSelezionati != null) {
-            for (Ingrediente extra : this.ingredientiExtraSelezionati) {
-                if (extra.getPrezzo() != null) {
-                    prezzoExtra += extra.getPrezzo();
+        if (this.pizza != null) {
+            // Logica esistente per le pizze
+            double prezzoExtra = 0;
+            if (this.ingredientiExtraSelezionati != null) {
+                for (Ingrediente extra : this.ingredientiExtraSelezionati) {
+                    if (extra.getPrezzo() != null) {
+                        prezzoExtra += extra.getPrezzo();
+                    }
                 }
             }
             double prezzoBasePizza = this.pizza.getPrezzoBase();
-            if (this.pizza.getScontoApplicato() != null && this.pizza.getScontoApplicato().getPercentuale() > 0) {
-                 prezzoBasePizza = this.pizza.getPrezzoScontato();
-            }
+            // Il CarrelloService gestisce già l'applicazione dello sconto e passa il prezzo calcolato.
+            // Quindi, qui ci basiamo sul prezzo base della pizza più gli extra.
+            // Se CarrelloService imposta prezzoUnitarioCalcolato, questo metodo potrebbe essere meno critico per il prezzo base,
+            // ma è comunque utile per gli extra e per una logica coesa del modello.
             this.prezzoUnitarioCalcolato = prezzoBasePizza + prezzoExtra;
-        } else if (this.pizza != null) {
-            this.prezzoUnitarioCalcolato = this.pizza.getPrezzoScontato();
+
+        } else if (this.bevanda != null) { // NUOVA CONDIZIONE PER LE BEVANDE
+            this.prezzoUnitarioCalcolato = this.bevanda.getPrezzo();
+            // Per le bevande non ci sono ingredienti extra, quindi azzeriamo la lista.
+            // (Anche se il CarrelloService dovrebbe già passare una lista vuota o null).
+            if (this.ingredientiExtraSelezionati != null) {
+                this.ingredientiExtraSelezionati.clear();
+            }
         } else {
+            // Se non è né pizza né bevanda (dovrebbe essere un caso raro con la logica attuale)
             this.prezzoUnitarioCalcolato = 0.0;
         }
     }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(carrello, id, ingredientiExtraSelezionati, pizza, prezzoUnitarioCalcolato, quantita);
-	}
+    // Questo metodo calcola il totale di un singolo elemento carrello (quantità * prezzo unitario)
+    public double getPrezzoTotaleElemento() {
+        // Se il prezzoUnitarioCalcolato è sempre aggiornato dal CarrelloService,
+        // questa è la formula corretta.
+        return this.quantita * this.prezzoUnitarioCalcolato;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ElementoCarrello other = (ElementoCarrello) obj;
-		return Objects.equals(carrello, other.carrello) && Objects.equals(id, other.id)
-				&& Objects.equals(ingredientiExtraSelezionati, other.ingredientiExtraSelezionati)
-				&& Objects.equals(pizza, other.pizza) && Double.doubleToLongBits(prezzoUnitarioCalcolato) == Double
-						.doubleToLongBits(other.prezzoUnitarioCalcolato)
-				&& quantita == other.quantita;
-	}
+    @Override
+    public int hashCode() {
+        // MODIFICA QUI: Includi 'bevanda' nell'hashCode
+        return Objects.hash(carrello, id, ingredientiExtraSelezionati, pizza, bevanda, prezzoUnitarioCalcolato, quantita);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ElementoCarrello other = (ElementoCarrello) obj;
+        // MODIFICA QUI: Considera sia pizza che bevanda per l'uguaglianza
+        return Objects.equals(carrello, other.carrello) && Objects.equals(id, other.id)
+                && Objects.equals(ingredientiExtraSelezionati, other.ingredientiExtraSelezionati)
+                && Objects.equals(pizza, other.pizza)
+                && Objects.equals(bevanda, other.bevanda) // Confronta anche la bevanda
+                && Double.doubleToLongBits(prezzoUnitarioCalcolato) == Double.doubleToLongBits(other.prezzoUnitarioCalcolato)
+                && quantita == other.quantita;
+    }
 }

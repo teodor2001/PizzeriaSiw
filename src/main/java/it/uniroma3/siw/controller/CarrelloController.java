@@ -3,6 +3,7 @@ package it.uniroma3.siw.controller;
 import it.uniroma3.siw.model.Carrello;
 import it.uniroma3.siw.model.Cliente;
 import it.uniroma3.siw.model.Pizza;
+import it.uniroma3.siw.service.BevandaService;
 import it.uniroma3.siw.service.CarrelloService;
 import it.uniroma3.siw.service.ClienteService;
 import it.uniroma3.siw.service.PizzaService;
@@ -34,6 +35,10 @@ public class CarrelloController {
     @Autowired
     private PizzaService pizzaService;
     
+    @Autowired 
+    private BevandaService bevandaService;
+
+    
     @Autowired
     private ClienteService clienteService;
 
@@ -49,19 +54,19 @@ public class CarrelloController {
         return "carrello"; 
     }
 
-    @PostMapping("/aggiungi")
-    public String aggiungiAlCarrello(@RequestParam Long pizzaId,
+    @PostMapping("/aggiungiPizza") // Ho rinominato questo endpoint per chiarezza
+    public String aggiungiPizzaAlCarrello(@RequestParam Long pizzaId,
                                      @RequestParam(required = false) List<Long> ingredientiExtraIds,
                                      @RequestParam(defaultValue = "1") int quantita,
                                      RedirectAttributes redirectAttributes,
                                      HttpServletRequest request) {
         try {
             carrelloService.aggiungiPizzaAlCarrello(pizzaId, ingredientiExtraIds, quantita);
-            redirectAttributes.addFlashAttribute("successoCarrello", "Articolo aggiunto al carrello!");
+            redirectAttributes.addFlashAttribute("successoCarrello", "Pizza aggiunta al carrello!");
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("erroreCarrello", e.getMessage());
-            Pizza pizza = pizzaService.findById(pizzaId); //
-            if (pizza != null && pizza.getScontoApplicato() != null && pizza.getScontoApplicato().getPercentuale() > 0) { //
+            Pizza pizza = pizzaService.findById(pizzaId);
+            if (pizza != null && pizza.getScontoApplicato() != null && pizza.getScontoApplicato().getPercentuale() > 0) {
                 return "redirect:/pizze_scontate";
             }
             return "redirect:/";
@@ -76,6 +81,25 @@ public class CarrelloController {
         }
         return "redirect:/";
     }
+
+    @PostMapping("/aggiungiBevanda") // Nuovo endpoint per le bevande
+    public String aggiungiBevandaAlCarrello(@RequestParam Long bevandaId,
+                                           @RequestParam(defaultValue = "1") int quantita,
+                                           RedirectAttributes redirectAttributes,
+                                           HttpServletRequest request) {
+        try {
+            carrelloService.aggiungiBevandaAlCarrello(bevandaId, quantita);
+            redirectAttributes.addFlashAttribute("successoCarrello", "Bevanda aggiunta al carrello!");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("erroreCarrello", e.getMessage());
+        }
+        String referer = request.getHeader("Referer");
+        if (referer != null && !referer.isEmpty()) {
+            return "redirect:" + referer;
+        }
+        return "redirect:/"; // O una pagina specifica per bevande se ne hai una
+    }
+
     
     @PostMapping("/rimuovi/{elementoCarrelloId}")
     public String rimuoviDalCarrello(@PathVariable Long elementoCarrelloId, RedirectAttributes redirectAttributes) {

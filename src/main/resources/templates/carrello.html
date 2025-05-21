@@ -95,22 +95,35 @@
                     <tbody>
 						<tr th:each="elemento, iterStat : ${carrello.elementi}" class="align-middle">
 							<td>
-							    <img th:if="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
-							         th:src="@{${elemento.pizza.imageUrl}}"
-							         class="cart-item-img" alt="Immagine Pizza">
-							    <img th:unless="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
-							         th:src="@{/images/pizze/} + ${elemento.pizza.nome.replaceAll('\\s+', '')} + '.jpg'"
-							         class="cart-item-img" 
-							         th:alt="'Immagine di ' + ${elemento.pizza.nome}"
-							         onerror="this.onerror=null; this.src='/images/pizze/Default.jpg';"> </td>
+                                <div th:if="${elemento.pizza != null}">
+                                    <img th:if="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
+                                         th:src="@{${elemento.pizza.imageUrl}}"
+                                         class="cart-item-img" alt="Immagine Pizza">
+                                    <img th:unless="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
+                                         th:src="@{/images/pizze/} + ${elemento.pizza.nome.replaceAll('\\s+', '')} + '.jpg'"
+                                         class="cart-item-img" 
+                                         th:alt="'Immagine di ' + ${elemento.pizza.nome}"
+                                         onerror="this.onerror=null; this.src='/images/pizze/Default.jpg';">
+                                </div>
+                                <div th:if="${elemento.bevanda != null}" class="cart-item-img-placeholder">
+                                    </div>
+                            </td>
 						    <td>
-						        <strong th:text="${elemento.pizza.nome}">Nome Pizza</strong>
-						        <div class="cart-item-details" th:if="${not #lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
-						            Extra: <span th:text="${#strings.listJoin(elemento.ingredientiExtraSelezionati.![nome], ', ')}"></span>
-						        </div>
-						        <div class="cart-item-details" th:if="${#lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
-						            Extra: Nessuno
-						        </div>
+                                <div th:if="${elemento.pizza != null}">
+                                    <strong th:text="${elemento.pizza.nome}">Nome Pizza</strong>
+                                    <div class="cart-item-details" th:if="${not #lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
+                                        Extra: <span th:text="${#strings.listJoin(elemento.ingredientiExtraSelezionati.![nome], ', ')}"></span>
+                                    </div>
+                                    <div class="cart-item-details" th:if="${#lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
+                                        Extra: Nessuno
+                                    </div>
+                                </div>
+                                <div th:if="${elemento.bevanda != null}">
+                                    <strong th:text="${elemento.bevanda.nome}">Nome Bevanda</strong>
+                                    <div class="cart-item-details">
+                                        Quantità: <span th:text="${#numbers.formatDecimal(elemento.bevanda.quantità, 0, 'COMMA', 1, 'POINT')}"></span> L
+                                    </div>
+                                </div>
 						    </td>
 						    <td class="text-center">
 						        <form th:if="${not #lists.isEmpty(carrello.elementi)}"
@@ -201,4 +214,4 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>	
+</html>
