@@ -1,0 +1,99 @@
+body {
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    margin: 0;
+}
+
+.container {
+    background-color: #ffffff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.form-control {
+    margin-bottom: 1rem;
+}
+
+.error-message {
+    color: red;
+    margin-bottom: 1rem;
+}
+
+.logout-message {
+    color: green;
+    margin-bottom: 1rem;
+}
+
+.btn-danger {
+    width: 100%;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.oauth-separator {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+    color: #6c757d;
+}
+
+.oauth-separator::before,
+.oauth-separator::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.oauth-separator:not(:empty)::before {
+    margin-right: .25em;
+}
+
+.oauth-separator:not(:empty)::after {
+    margin-left: .25em;
+}
+
+.btn-google {
+    display: inline-block;
+    background-color: #626e60; 
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    width: 100%;
+    margin-bottom: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.btn-google:hover {
+    background-color: #626e60;
+    color: white;
+}
+
+p {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+a {
+    color: #ff2400;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
