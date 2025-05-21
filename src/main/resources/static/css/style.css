@@ -127,7 +127,7 @@ body {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #ff2400;
+    background-color: #FFA500;
     color: white;
     padding: 15px;
     border-radius: 50%;
@@ -143,7 +143,7 @@ body {
 }
 
 .cart-icon-fixed:hover {
-    background-color: #e02000;
+    background-color: #FEDF00;
     color: white;
 }
 
