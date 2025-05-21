@@ -17,6 +17,9 @@ public class SecurityConfig {
 
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
+    
+    @Autowired
+    private CustomLogoutHandler customLogoutHandler;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -65,6 +68,7 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                        .addLogoutHandler(customLogoutHandler)
                         .logoutSuccessUrl("/login?logout")
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)

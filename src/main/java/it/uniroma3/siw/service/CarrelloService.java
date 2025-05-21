@@ -29,9 +29,6 @@ import java.util.stream.Collectors;
 public class CarrelloService {
 
     @Autowired
-    private CarrelloRepository carrelloRepository;
-
-    @Autowired
     private ElementoCarrelloRepository elementoCarrelloRepository;
 
     @Autowired
@@ -45,6 +42,9 @@ public class CarrelloService {
 
     @Autowired
     private HttpSession httpSession;
+    
+    @Autowired
+    private CarrelloRepository carrelloRepository;
 
     private static final String SESSION_CART_KEY = "sessionCart";
 
@@ -324,5 +324,24 @@ public class CarrelloService {
         carrello.getElementi().remove(itemIndex);
         httpSession.setAttribute(SESSION_CART_KEY, carrello); 
         return carrello;
+    }
+    
+    @Transactional
+    public void svuotaCarrelloSpecifico(Long carrelloId) {
+        Optional<Carrello> carrelloOpt = carrelloRepository.findById(carrelloId);
+        if (carrelloOpt.isPresent()) {
+            Carrello carrello = carrelloOpt.get();
+            if (carrello.getElementi() != null) {
+                carrello.getElementi().clear();
+            }
+            carrello.setDataUltimaModifica(LocalDateTime.now());
+            carrelloRepository.save(carrello);
+        } else {
+            System.out.println("Tentativo di svuotare un carrello non esistente con ID: " + carrelloId);
+        }
+    }
+    @Transactional(readOnly = true)
+    public Optional<Carrello> getCarrelloByClienteId(Long clienteId) {
+        return carrelloRepository.findByClienteIdCliente(clienteId);
     }
 }

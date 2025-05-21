@@ -93,57 +93,60 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="elemento, iterStat : ${carrello.elementi}" class="align-middle">
-                            <td>
-                                <img th:if="${elemento.pizza.imageUrl != null}" th:src="@{${elemento.pizza.imageUrl}}"
-                                     class="cart-item-img" alt="Immagine Pizza">
-                                <img th:unless="${elemento.pizza.imageUrl != null}" th:src="@{/images/pizze/Default.jpg}"
-                                     class="cart-item-img" alt="Immagine Default">
-                            </td>
-                            <td>
-                                <strong th:text="${elemento.pizza.nome}">Nome Pizza</strong>
-                                <div class="cart-item-details" th:if="${not #lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
-                                    Extra: <span th:text="${#strings.listJoin(elemento.ingredientiExtraSelezionati.![nome], ', ')}"></span>
-                                </div>
-                                <div class="cart-item-details" th:if="${#lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
-                                    Extra: Nessuno
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                <form th:if="${not #lists.isEmpty(carrello.elementi)}"
-                                      th:with="actionUrlUserAggiorna=@{/carrello/aggiorna/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})},
-                                                 actionUrlAnonAggiorna=@{/carrello/aggiorna-anon}"
-                                      th:action="${(#authentication.principal != 'anonymousUser') ? actionUrlUserAggiorna : actionUrlAnonAggiorna}"
-                                      method="post" class="d-inline-flex align-items-center">
-                                    <input type="number" name="quantita" th:value="${elemento.quantita}" min="1" max="99" class="form-control form-control-sm quantity-input">
-                                    <input th:if="${#authentication.principal == 'anonymousUser'}" type="hidden" name="itemIndex" th:value="${iterStat.index}" />
-                                    <button type="submit" class="btn btn-outline-primary btn-sm ms-1" title="Aggiorna quantità">
-                                        <i class="bi bi-check-lg"></i>
-                                    </button>
-                                </form>
-                                </td>
-                            <td class="text-end" th:text="${#numbers.formatDecimal(elemento.prezzoUnitarioCalcolato, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
-                            <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(elemento.getPrezzoTotaleElemento(), 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
-                            <td class="text-center">
-                                 <form th:if="${not #lists.isEmpty(carrello.elementi)}"
-                                      th:with="actionUrlUserRimuovi=@{/carrello/rimuovi/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})},
-                                                 actionUrlAnonRimuovi=@{/carrello/rimuovi-anon}"
-                                      th:action="${(#authentication.principal != 'anonymousUser') ? actionUrlUserRimuovi : actionUrlAnonRimuovi}"
-                                       method="post">
-                                    <input th:if="${#authentication.principal == 'anonymousUser'}" type="hidden" name="itemIndex" th:value="${iterStat.index}" />
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Rimuovi dal carrello">
-                                        <i class="bi bi-trash3"></i>
-                                    </button>
-                                </form>
-                                </td>
-                        </tr>
+						<tr th:each="elemento, iterStat : ${carrello.elementi}" class="align-middle">
+							<td>
+							    <img th:if="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
+							         th:src="@{${elemento.pizza.imageUrl}}"
+							         class="cart-item-img" alt="Immagine Pizza">
+							    <img th:unless="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
+							         th:src="@{/images/pizze/} + ${elemento.pizza.nome.replaceAll('\\s+', '')} + '.jpg'"
+							         class="cart-item-img" 
+							         th:alt="'Immagine di ' + ${elemento.pizza.nome}"
+							         onerror="this.onerror=null; this.src='/images/pizze/Default.jpg';"> </td>
+						    <td>
+						        <strong th:text="${elemento.pizza.nome}">Nome Pizza</strong>
+						        <div class="cart-item-details" th:if="${not #lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
+						            Extra: <span th:text="${#strings.listJoin(elemento.ingredientiExtraSelezionati.![nome], ', ')}"></span>
+						        </div>
+						        <div class="cart-item-details" th:if="${#lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
+						            Extra: Nessuno
+						        </div>
+						    </td>
+						    <td class="text-center">
+						        <form th:if="${not #lists.isEmpty(carrello.elementi)}"
+						              th:with="actionUrlUserAggiorna=@{/carrello/aggiorna/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})},
+						                         actionUrlAnonAggiorna=@{/carrello/aggiorna-anon}"
+						              th:action="${(#authentication.principal != 'anonymousUser') ? actionUrlUserAggiorna : actionUrlAnonAggiorna}"
+						              method="post" class="d-inline-flex align-items-center">
+						            <input type="number" name="quantita" th:value="${elemento.quantita}" min="1" max="99" class="form-control form-control-sm quantity-input">
+						            <input th:if="${#authentication.principal == 'anonymousUser'}" type="hidden" name="itemIndex" th:value="${iterStat.index}" />
+						            <button type="submit" class="btn btn-outline-primary btn-sm ms-1" title="Aggiorna quantità">
+						                <i class="bi bi-check-lg"></i>
+						            </button>
+						        </form>
+						        </td>
+						    <td class="text-end" th:text="${#numbers.formatDecimal(elemento.prezzoUnitarioCalcolato, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
+						    <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(elemento.getPrezzoTotaleElemento(), 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
+						    <td class="text-center">
+						         <form th:if="${not #lists.isEmpty(carrello.elementi)}"
+						              th:with="actionUrlUserRimuovi=@{/carrello/rimuovi/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})},
+						                         actionUrlAnonRimuovi=@{/carrello/rimuovi-anon}"
+						              th:action="${(#authentication.principal != 'anonymousUser') ? actionUrlUserRimuovi : actionUrlAnonRimuovi}"
+						               method="post">
+						            <input th:if="${#authentication.principal == 'anonymousUser'}" type="hidden" name="itemIndex" th:value="${iterStat.index}" />
+						            <button type="submit" class="btn btn-outline-danger btn-sm" title="Rimuovi dal carrello">
+						                <i class="bi bi-trash3"></i>
+						            </button>
+						        </form>
+						        </td>
+						</tr>
                     </tbody>
                 </table>
             </div>
 
             <div class="row mt-4 gy-3">
                 <div class="col-md-6 col-lg-8 d-flex align-items-start action-buttons">
-                    <a th:href="@{/}" class="btn btn-outline-secondary me-2">
+                    <a th:href="@{/pizze_scontate}" class="btn btn-outline-secondary me-2">
                         <i class="bi bi-arrow-left-circle"></i> Continua Shopping
                     </a>
                     <form th:action="@{/carrello/svuota}" method="post" class="d-inline">
