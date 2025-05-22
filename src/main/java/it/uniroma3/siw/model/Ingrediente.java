@@ -4,11 +4,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import java.util.ArrayList;
-import java.util.List;
+import jakarta.persistence.Column;
 import java.util.Objects;
 
 @Entity
@@ -20,9 +18,10 @@ public class Ingrediente {
 
     private String nome;
     private Double prezzo;
+    private String imageUrl;
 
-    @ManyToMany(mappedBy = "ingredientiExtra")
-    private List<Pizza> pizzeExtra = new ArrayList<>(); // Dichiarazione di pizzeExtra
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean active = true;
 
     @ManyToOne
     @JoinColumn(name = "menu_id")
@@ -60,12 +59,12 @@ public class Ingrediente {
         this.prezzo = prezzo;
     }
 
-    public List<Pizza> getPizzeExtra() { // Getter per pizzeExtra
-        return pizzeExtra;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setPizzeExtra(List<Pizza> pizzeExtra) { // Setter per pizzeExtra
-        this.pizzeExtra = pizzeExtra;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public Menu getMenu() {
@@ -76,14 +75,12 @@ public class Ingrediente {
         this.menu = menu;
     }
 
-    public void aggiungiPizzaExtra(Pizza pizza) {
-        this.pizzeExtra.add(pizza);
-        pizza.getIngredientiExtra().add(this);
+    public boolean isActive() {
+        return active;
     }
 
-    public void rimuoviPizzaExtra(Pizza pizza) {
-        this.pizzeExtra.remove(pizza);
-        pizza.getIngredientiExtra().remove(this);
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     @Override
@@ -91,11 +88,15 @@ public class Ingrediente {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Ingrediente that = (Ingrediente) o;
-        return Objects.equals(id, that.id) && Objects.equals(nome, that.nome) && Objects.equals(prezzo, that.prezzo) && Objects.equals(pizzeExtra, that.pizzeExtra) && Objects.equals(menu, that.menu);
+        return Objects.equals(id, that.id) &&
+               Objects.equals(nome, that.nome) &&
+               Objects.equals(prezzo, that.prezzo) &&
+               Objects.equals(imageUrl, that.imageUrl) &&
+               Objects.equals(menu, that.menu);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, nome, prezzo, pizzeExtra, menu);
+        return Objects.hash(id, nome, prezzo, imageUrl, menu);
     }
 }

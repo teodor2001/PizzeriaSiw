@@ -5,5 +5,5 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.Optional;
 
 public interface MenuRepository extends CrudRepository<Menu, Long> {
-    Optional<Menu> findFirstBy();
+    Optional<Menu> findByNome(String nome);
 }

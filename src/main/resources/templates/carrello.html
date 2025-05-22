@@ -11,17 +11,17 @@
     <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 
-<body>
+<body class="sticky-footer-layout">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-danger" sec:authorize="!isAuthenticated()">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger" sec:authorize="isAnonymous()">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="/">
                 <img th:src="@{/images/LogoPizzeria.jpg}" alt="Antica Pizzeria Romana" class="logo-navbar me-2">
                 <span class="fw-bold text-white">Antica Pizzeria Romana</span>
             </a>
             <div class="d-flex">
-                <a class="btn btn-outline-light me-2" href="/login">Login</a>
-                <a class="btn btn-warning" href="/register">Registrazione</a>
+                <a class="btn btn-outline-light me-2" th:href="@{/login}">Login</a>
+                <a class="btn btn-warning" th:href="@{/register}">Registrazione</a>
             </div>
         </div>
     </nav>
@@ -51,163 +51,248 @@
         </div>
     </nav>
 
-    <div class="container mt-4 mb-5">
-        <h1 class="mb-4 display-5 text-danger">Il Tuo Carrello</h1>
+    <div class="main-content">
+        <div class="container mt-4 mb-5">
+            <h1 class="mb-4 display-5 text-danger">Il Tuo Carrello</h1>
 
-        <div th:if="${successoCarrello}" class="alert alert-success alert-dismissible fade show" role="alert">
-            <span th:text="${successoCarrello}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <div th:if="${erroreCarrello}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            <span th:text="${erroreCarrello}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-
-        <div th:if="${carrello == null or #lists.isEmpty(carrello.elementi)}">
-            <div class="alert alert-info shadow-sm" role="alert">
-                <h4 class="alert-heading">Il tuo carrello è vuoto!</h4>
-                <p>Sembra che tu non abbia ancora aggiunto nessuna delizia al tuo carrello.</p>
-                <hr>
-                <p class="mb-0">
-                    <a th:href="@{/pizze_scontate}" class="btn btn-lg btn-warning" sec:authorize="isAuthenticated()">
-                        <i class="bi bi-eye-fill"></i> Vai alle Pizze in Promozione
-                    </a>
-                    <a th:href="@{/}" class="btn btn-lg btn-warning" sec:authorize="!isAuthenticated()">
-                        <i class="bi bi-eye-fill"></i> Scopri le Nostre Pizze
-                    </a>
-                </p>
+            <div th:if="${successoCarrello}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${successoCarrello}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </div>
-
-        <div th:if="${carrello != null and not #lists.isEmpty(carrello.elementi)}">
-            <div class="table-responsive shadow-sm">
-                <table class="table table-hover align-middle">
-                    <thead class="table-danger">
-                        <tr>
-                            <th scope="col" style="width: 15%;">Prodotto</th>
-                            <th scope="col">Dettagli</th>
-                            <th scope="col" class="text-center" style="width: 15%;">Quantità</th>
-                            <th scope="col" class="text-end" style="width: 15%;">Prezzo Unitario</th>
-                            <th scope="col" class="text-end" style="width: 15%;">Subtotale</th>
-                            <th scope="col" class="text-center" style="width: 10%;">Azione</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-						<tr th:each="elemento, iterStat : ${carrello.elementi}" class="align-middle">
-							<td>
-                                <div th:if="${elemento.pizza != null}">
-                                    <img th:if="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
-                                         th:src="@{${elemento.pizza.imageUrl}}"
-                                         class="cart-item-img" alt="Immagine Pizza">
-                                    <img th:unless="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
-                                         th:src="@{/images/pizze/} + ${elemento.pizza.nome.replaceAll('\\s+', '')} + '.jpg'"
-                                         class="cart-item-img" 
-                                         th:alt="'Immagine di ' + ${elemento.pizza.nome}"
-                                         onerror="this.onerror=null; this.src='/images/pizze/Default.jpg';">
-                                </div>
-                                <div th:if="${elemento.bevanda != null}" class="cart-item-img-placeholder">
-                                    </div>
-                            </td>
-						    <td>
-                                <div th:if="${elemento.pizza != null}">
-                                    <strong th:text="${elemento.pizza.nome}">Nome Pizza</strong>
-                                    <div class="cart-item-details" th:if="${not #lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
-                                        Extra: <span th:text="${#strings.listJoin(elemento.ingredientiExtraSelezionati.![nome], ', ')}"></span>
-                                    </div>
-                                    <div class="cart-item-details" th:if="${#lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
-                                        Extra: Nessuno
-                                    </div>
-                                </div>
-                                <div th:if="${elemento.bevanda != null}">
-                                    <strong th:text="${elemento.bevanda.nome}">Nome Bevanda</strong>
-                                    <div class="cart-item-details">
-                                        Quantità: <span th:text="${#numbers.formatDecimal(elemento.bevanda.quantità, 0, 'COMMA', 1, 'POINT')}"></span> L
-                                    </div>
-                                </div>
-						    </td>
-						    <td class="text-center">
-						        <form th:if="${not #lists.isEmpty(carrello.elementi)}"
-						              th:with="actionUrlUserAggiorna=@{/carrello/aggiorna/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})},
-						                         actionUrlAnonAggiorna=@{/carrello/aggiorna-anon}"
-						              th:action="${(#authentication.principal != 'anonymousUser') ? actionUrlUserAggiorna : actionUrlAnonAggiorna}"
-						              method="post" class="d-inline-flex align-items-center">
-						            <input type="number" name="quantita" th:value="${elemento.quantita}" min="1" max="99" class="form-control form-control-sm quantity-input">
-						            <input th:if="${#authentication.principal == 'anonymousUser'}" type="hidden" name="itemIndex" th:value="${iterStat.index}" />
-						            <button type="submit" class="btn btn-outline-primary btn-sm ms-1" title="Aggiorna quantità">
-						                <i class="bi bi-check-lg"></i>
-						            </button>
-						        </form>
-						        </td>
-						    <td class="text-end" th:text="${#numbers.formatDecimal(elemento.prezzoUnitarioCalcolato, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
-						    <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(elemento.getPrezzoTotaleElemento(), 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
-						    <td class="text-center">
-						         <form th:if="${not #lists.isEmpty(carrello.elementi)}"
-						              th:with="actionUrlUserRimuovi=@{/carrello/rimuovi/{elementoCarrelloId}(elementoCarrelloId=${elemento.id})},
-						                         actionUrlAnonRimuovi=@{/carrello/rimuovi-anon}"
-						              th:action="${(#authentication.principal != 'anonymousUser') ? actionUrlUserRimuovi : actionUrlAnonRimuovi}"
-						               method="post">
-						            <input th:if="${#authentication.principal == 'anonymousUser'}" type="hidden" name="itemIndex" th:value="${iterStat.index}" />
-						            <button type="submit" class="btn btn-outline-danger btn-sm" title="Rimuovi dal carrello">
-						                <i class="bi bi-trash3"></i>
-						            </button>
-						        </form>
-						        </td>
-						</tr>
-                    </tbody>
-                </table>
+            <div th:if="${erroreCarrello}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <span th:text="${erroreCarrello}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
 
-            <div class="row mt-4 gy-3">
-                <div class="col-md-6 col-lg-8 d-flex align-items-start action-buttons">
-                    <a th:href="@{/pizze_scontate}" class="btn btn-outline-secondary me-2">
-                        <i class="bi bi-arrow-left-circle"></i> Continua Shopping
-                    </a>
-                    <form th:action="@{/carrello/svuota}" method="post" class="d-inline">
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('Sei sicuro di voler svuotare il carrello?')">
-                            <i class="bi bi-cart-x"></i> Svuota Carrello
-                        </button>
-                    </form>
+            <div th:if="${carrello == null or #lists.isEmpty(carrello.elementi)}">
+                <div class="alert alert-info shadow-sm" role="alert">
+                    <h4 class="alert-heading">Il tuo carrello è vuoto!</h4>
+                    <p>Sembra che tu non abbia ancora aggiunto nessuna delizia al tuo carrello.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a sec:authorize="isAuthenticated()" th:href="@{/pizze_scontate}" class="btn btn-lg btn-warning">
+                            <i class="bi bi-eye-fill"></i> Vai alle Pizze in Promozione
+                        </a>
+                        <a sec:authorize="isAnonymous()" th:href="@{/}" class="btn btn-lg btn-warning">
+                            <i class="bi bi-eye-fill"></i> Scopri le Nostre Pizze
+                        </a>
+                    </p>
                 </div>
-                <div class="col-md-6 col-lg-4 text-md-end">
-                    <div class="card shadow-sm">
-                        <div class="card-body">
-                            <h4 class="card-title text-danger">Riepilogo Ordine</h4>
-                            <hr>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span>Subtotale Articoli:</span>
-                                <span th:text="${#numbers.formatDecimal(totaleCarrello, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</span>
-                            </div>
-                            <hr>
-                            <div class="d-flex justify-content-between cart-total-summary text-danger">
-                                <span>TOTALE:</span>
-                                <span th:text="${#numbers.formatDecimal(totaleCarrello, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</span>
-                            </div>
-                            <div class="d-grid gap-2 mt-3">
-                                <a href="#" class="btn btn-success btn-lg">
-                                    <i class="bi bi-credit-card"></i> Procedi all'Ordine
-                                </a>
+            </div>
+
+            <div th:if="${carrello != null and not #lists.isEmpty(carrello.elementi)}">
+                <div class="table-responsive shadow-sm">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-danger">
+                            <tr>
+                                <th scope="col" style="width: 10%;">Prodotto</th>
+                                <th scope="col" style="width: 30%;">Dettagli</th>
+                                <th scope="col" class="text-center" style="width: 15%;">Quantità</th>
+                                <th scope="col" class="text-end" style="width: 15%;">Prezzo Unit.</th>
+                                <th scope="col" class="text-end" style="width: 15%;">Subtotale</th>
+                                <th scope="col" class="text-center" style="width: 15%;">Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="elemento, iterStat : ${carrello.elementi}" class="align-middle">
+                                <td>
+                                    <div th:if="${elemento.pizza != null}">
+                                        <img th:if="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
+                                             th:src="@{${elemento.pizza.imageUrl}}"
+                                             class="cart-item-img" alt="Immagine Pizza"
+                                             onerror="this.onerror=null; this.src='/images/pizze/Default.jpg';">
+                                        <img th:unless="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
+                                             th:src="@{/images/pizze/Default.jpg}"
+                                             class="cart-item-img" 
+                                             th:alt="'Immagine di ' + ${elemento.pizza.nome}">
+                                    </div>
+                                    <div th:if="${elemento.bevanda != null}">
+                                        <img th:if="${elemento.bevanda.imageUrl != null && !elemento.bevanda.imageUrl.isEmpty()}"
+                                             th:src="@{${elemento.bevanda.imageUrl}}"
+                                             class="cart-item-img" alt="Immagine Bevanda"
+                                             onerror="this.onerror=null; this.src='/images/bevande/DefaultBevanda.jpg';">
+                                        <img th:unless="${elemento.bevanda.imageUrl != null && !elemento.bevanda.imageUrl.isEmpty()}"
+                                             th:src="@{/images/bevande/DefaultBevanda.jpg}" 
+                                             class="cart-item-img" 
+                                             th:alt="'Immagine di ' + ${elemento.bevanda.nome}">
+                                        </div>
+                                </td>
+                                <td class="details-cell"> 
+                                    <div th:if="${elemento.pizza != null}">
+                                        <strong th:text="${elemento.pizza.nome}">Nome Pizza</strong>
+                                        
+                                        <div class="mt-2" th:if="${elemento.pizza.ingredientiExtraDisponibili != null and not #sets.isEmpty(elemento.pizza.ingredientiExtraDisponibili)}">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                    data-bs-toggle="modal"
+                                                    th:attr="data-bs-target='#extraIngredientsModal-' + (${elemento.id} != null ? ${elemento.id} : ${iterStat.index})">
+                                                <i class="bi bi-plus-circle"></i> Aggiungi Extra
+                                            </button>
+                                        </div>
+
+                                        <div class="cart-item-details mt-1" th:if="${elemento.ingredientiExtraSelezionati != null and not #lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
+                                            Extra selezionati: <span th:text="${#strings.listJoin(elemento.ingredientiExtraSelezionati.![nome], ', ')}"></span>
+                                        </div>
+                                        <div class="cart-item-details mt-1" th:if="${elemento.ingredientiExtraSelezionati == null or #lists.isEmpty(elemento.ingredientiExtraSelezionati)}">
+                                            Nessun extra selezionato.
+                                        </div>
+                                    </div>
+
+                                    <div th:if="${elemento.bevanda != null}">
+                                        <strong th:text="${elemento.bevanda.nome}">Nome Bevanda</strong>
+                                        <div class="cart-item-details">
+                                            Volume: <span th:text="${#numbers.formatDecimal(elemento.bevanda.quantità, 0, 'COMMA', 1, 'POINT')}"></span> L
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <form th:if="${#authorization.expression('isAuthenticated()') and elemento.id != null}"
+                                          th:action="@{/carrello/aggiorna/{elemId}(elemId=${elemento.id})}"
+                                          method="post" class="d-inline-flex align-items-center justify-content-center">
+                                        <input type="number" name="quantita" th:value="${elemento.quantita}" min="0" max="99" class="form-control form-control-sm quantity-input">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm ms-1" title="Aggiorna quantità">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                    <form th:if="${!#authorization.expression('isAuthenticated()') or elemento.id == null}"
+                                          th:action="@{/carrello/aggiorna-anon}"
+                                          method="post" class="d-inline-flex align-items-center justify-content-center">
+                                        <input type="number" name="quantita" th:value="${elemento.quantita}" min="0" max="99" class="form-control form-control-sm quantity-input">
+                                        <input type="hidden" name="itemIndex" th:value="${iterStat.index}" />
+                                        <button type="submit" class="btn btn-outline-primary btn-sm ms-1" title="Aggiorna quantità">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td class="text-end" th:text="${#numbers.formatDecimal(elemento.prezzoUnitarioCalcolato, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
+                                <td class="text-end fw-bold" th:text="${#numbers.formatDecimal(elemento.getPrezzoTotaleElemento(), 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</td>
+                                <td class="text-center">
+                                     <form th:if="${#authorization.expression('isAuthenticated()') and elemento.id != null}"
+                                          th:action="@{/carrello/rimuovi/{elemId}(elemId=${elemento.id})}"
+                                           method="post">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Rimuovi dal carrello" onclick="return confirm('Sei sicuro di voler rimuovere questo articolo?');">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                     <form th:if="${!#authorization.expression('isAuthenticated()') or elemento.id == null}"
+                                          th:action="@{/carrello/rimuovi-anon}"
+                                           method="post">
+                                        <input type="hidden" name="itemIndex" th:value="${iterStat.index}" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Rimuovi dal carrello" onclick="return confirm('Sei sicuro di voler rimuovere questo articolo?');">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+
+                                    <div th:if="${elemento.pizza != null and elemento.pizza.ingredientiExtraDisponibili != null and not #sets.isEmpty(elemento.pizza.ingredientiExtraDisponibili)}">
+                                        <div class="modal fade" th:id="'extraIngredientsModal-' + (${elemento.id} != null ? ${elemento.id} : ${iterStat.index})" tabindex="-1"
+                                             th:aria-labelledby="'extraIngredientsModalLabel-' + (${elemento.id} != null ? ${elemento.id} : ${iterStat.index})" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" th:id="'extraIngredientsModalLabel-' + (${elemento.id} != null ? ${elemento.id} : ${iterStat.index})"
+                                                            th:text="'Aggiungi extra per ' + ${elemento.pizza.nome}">Seleziona Extra</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <form th:if="${#authorization.expression('isAuthenticated()') and elemento.id != null}" th:action="@{/carrello/aggiornaExtra/{elemId}(elemId=${elemento.id})}" method="post">
+                                                            <div th:each="extra : ${elemento.pizza.ingredientiExtraDisponibili}" class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="selectedExtraIds" th:value="${extra.id}" th:id="'modal_extra_auth_' + ${elemento.id} + '_' + ${extra.id}"
+                                                                       th:checked="${elemento.ingredientiExtraSelezionati != null && #lists.contains(elemento.ingredientiExtraSelezionati.![id], extra.id)}">
+                                                                <label class="form-check-label" th:for="'modal_extra_auth_' + ${elemento.id} + '_' + ${extra.id}"
+                                                                       th:text="${extra.nome} + ' (+€' + ${#numbers.formatDecimal(extra.prezzo,1,2,'COMMA')} + ')'">
+                                                                </label>
+                                                            </div>
+                                                            <button type="submit" class="btn btn-primary mt-3 w-100">Conferma Extra</button>
+                                                        </form>
+                                                        <form th:if="${!#authorization.expression('isAuthenticated()') or elemento.id == null}" th:action="@{/carrello/aggiornaExtra-anon}" method="post">
+                                                            <input type="hidden" name="itemIndex" th:value="${iterStat.index}" />
+                                                             <div th:each="extra : ${elemento.pizza.ingredientiExtraDisponibili}" class="form-check">
+                                                                <input class="form-check-input" type="checkbox" name="selectedExtraIds" th:value="${extra.id}" th:id="'modal_extra_anon_' + ${iterStat.index} + '_' + ${extra.id}"
+                                                                       th:checked="${elemento.ingredientiExtraSelezionati != null && #lists.contains(elemento.ingredientiExtraSelezionati.![id], extra.id)}">
+                                                                <label class="form-check-label" th:for="'modal_extra_anon_' + ${iterStat.index} + '_' + ${extra.id}"
+                                                                       th:text="${extra.nome} + ' (+€' + ${#numbers.formatDecimal(extra.prezzo,1,2,'COMMA')} + ')'">
+                                                                </label>
+                                                            </div>
+                                                            <button type="submit" class="btn btn-primary mt-3 w-100">Conferma Extra</button>
+                                                        </form>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div> 
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mt-4 gy-3">
+                    <div class="col-md-6 col-lg-8 d-flex align-items-start action-buttons">
+                        <a sec:authorize="isAuthenticated()" th:href="@{/pizze_scontate}" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-arrow-left-circle"></i> Continua Shopping
+                        </a>
+                         <a sec:authorize="isAnonymous()" th:href="@{/}" class="btn btn-outline-secondary me-2">
+                            <i class="bi bi-arrow-left-circle"></i> Continua Shopping
+                        </a>
+                        <form th:action="@{/carrello/svuota}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Sei sicuro di voler svuotare il carrello?')">
+                                <i class="bi bi-cart-x"></i> Svuota Carrello
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6 col-lg-4 text-md-end">
+                        <div class="card shadow-sm">
+                            <div class="card-body">
+                                <h4 class="card-title text-danger">Riepilogo Ordine</h4>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotale Articoli:</span>
+                                    <span th:text="${#numbers.formatDecimal(totaleCarrello, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between cart-total-summary text-danger">
+                                    <span>TOTALE:</span>
+                                    <span th:text="${#numbers.formatDecimal(totaleCarrello, 1, 'COMMA', 2, 'POINT')} + ' €'">0.00 €</span>
+                                </div>
+                                <div class="d-grid gap-2 mt-3">
+                                    <a href="#" class="btn btn-success btn-lg">
+                                        <i class="bi bi-credit-card"></i> Procedi all'Ordine
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </div> 
+    </div> 
 
     <div>
         <a th:href="@{/carrello}" class="cart-icon-fixed">
             <i class="bi bi-cart-fill"></i>
+             <span th:if="${carrello != null and carrello.elementi != null and not #lists.isEmpty(carrello.elementi)}"
+                  class="badge bg-warning text-dark rounded-pill position-absolute top-0 start-100 translate-middle"
+                  th:text="${#lists.size(carrello.elementi)}">
+            </span>
         </a>
     </div>
 
     <footer class="bg-danger text-white py-3 mt-auto">
         <div class="container text-center">
             <h4>Contattaci</h4>
-            <p>
-                <span th:text="${pizzeria != null ? pizzeria.nome : 'Nome Pizzeria'}">Nome Pizzeria</span><br>
-                Indirizzo: <span th:text="${pizzeria != null ? pizzeria.indirizzo : 'Via'}">Via</span>, <span th:text="${pizzeria != null ? pizzeria.citta : 'Città'}">Città</span><br>
-                Telefono: <span th:text="${pizzeria != null ? pizzeria.telefono : 'Numero di Telefono'}">Numero di Telefono</span><br>
-                Email: <span th:text="${pizzeria != null ? pizzeria.email : 'Email'}">Email</span>
+             <p th:if="${pizzeria != null}">
+                <span th:text="${pizzeria.nome}">Nome Pizzeria</span><br>
+                Indirizzo: <span th:text="${pizzeria.indirizzo}">Via</span>, <span th:text="${pizzeria.citta}">Città</span><br>
+                Telefono: <span th:text="${pizzeria.telefono}">Numero di Telefono</span><br>
+                Email: <span th:text="${pizzeria.email}">Email</span>
+            </p>
+            <p th:unless="${pizzeria != null}">
+                Antica Pizzeria Romana <br>
+                Indirizzo non disponibile, Città non disponibile <br>
+                Telefono non disponibile <br>
+                Email non disponibile
             </p>
         </div>
     </footer>

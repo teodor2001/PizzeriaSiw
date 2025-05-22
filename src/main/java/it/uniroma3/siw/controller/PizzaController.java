@@ -9,7 +9,7 @@ import it.uniroma3.siw.repository.PizzaRepository;
 import it.uniroma3.siw.service.BevandaService;
 import it.uniroma3.siw.service.ClienteService;
 import it.uniroma3.siw.service.IngredienteService;
-import it.uniroma3.siw.service.PizzeriaService; 
+import it.uniroma3.siw.service.PizzeriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +20,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.util.List;
-import java.util.Optional; // Import per Optional
+import java.util.Set;
+import java.util.stream.Collectors;
+
 
 @Controller
 public class PizzaController {
@@ -36,36 +38,48 @@ public class PizzaController {
 
     @Autowired
     private PizzeriaService pizzeriaService;
-    
+
     @Autowired
     private ClienteService clienteService;
 
     @GetMapping("/")
     public String showHomePage(Model model) {
         List<Pizza> pizzeClassiche = pizzaRepository.findAll();
+        Set<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
+
+        for (Pizza pizza : pizzeClassiche) {
+            pizza.setIngredientiExtraDisponibili(tuttiGliIngredienti);
+        }
+
         List<Bevanda> bevande = bevandaService.findAll();
-        List<Ingrediente> ingredientiExtra = ingredienteService.findAll();
-        Optional<Pizzeria> pizzeriaOptional = pizzeriaService.findById(1L);
-        pizzeriaOptional.ifPresent(pizzeriaInfo -> model.addAttribute("pizzeria", pizzeriaInfo));
+        Pizzeria pizzeria = pizzeriaService.getOrCreateDefaultPizzeria();
+        model.addAttribute("pizzeria", pizzeria);
+        
         model.addAttribute("pizzeClassiche", pizzeClassiche);
         model.addAttribute("bevande", bevande);
-        model.addAttribute("ingredientiExtra", ingredientiExtra);
+        model.addAttribute("tuttiGliIngredientiExtra", tuttiGliIngredienti);
         return "index";
     }
 
     @GetMapping("/pizze_scontate")
     public String showTutteLePizze(Model model) {
         List<Pizza> tutteLePizze = pizzaRepository.findAll();
+        Set<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
+
+        for (Pizza pizza : tutteLePizze) {
+            pizza.setIngredientiExtraDisponibili(tuttiGliIngredienti);
+        }
+        
         List<Bevanda> bevande = bevandaService.findAll();
-        List<Ingrediente> ingredientiExtra = ingredienteService.findAll();
-        Optional<Pizzeria> pizzeriaOptional = pizzeriaService.findById(1L);
-        pizzeriaOptional.ifPresent(pizzeriaInfo -> model.addAttribute("pizzeria", pizzeriaInfo));
-        model.addAttribute("pizzeScontate", tutteLePizze);
+        Pizzeria pizzeria = pizzeriaService.getOrCreateDefaultPizzeria();
+        model.addAttribute("pizzeria", pizzeria);
+
+        model.addAttribute("elencoPizze", tutteLePizze);
         model.addAttribute("bevande", bevande);
-        model.addAttribute("ingredientiExtra", ingredientiExtra);
+        model.addAttribute("tuttiGliIngredientiExtra", tuttiGliIngredienti);
         return "pizze_scontate";
     }
-    
+
     @ModelAttribute
     public void addUserDetailsToModel(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -98,5 +112,4 @@ public class PizzaController {
             }
         }
     }
-    
 }

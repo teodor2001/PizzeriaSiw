@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class IngredienteService {
@@ -25,21 +27,30 @@ public class IngredienteService {
         return result.orElse(null);
     }
 
-    public List<Ingrediente> findAll() {
-        return (List<Ingrediente>) ingredienteRepository.findAll();
+    public Set<Ingrediente> findAll() {
+        List<Ingrediente> ingredienteList = ingredienteRepository.findAllByActiveTrue();
+        return new HashSet<>(ingredienteList);
     }
 
-    public List<Ingrediente> findAllById(Iterable<Long> ids) {
-        return ingredienteRepository.findAllById(ids);
+    public Set<Ingrediente> findAllById(Iterable<Long> ids) {
+        List<Ingrediente> ingredienteList = ingredienteRepository.findAllById(ids);
+        return new HashSet<>(ingredienteList);
     }
 
     @Transactional
     public void delete(Ingrediente ingrediente) {
-        ingredienteRepository.delete(ingrediente);
+        if (ingrediente != null) {
+            ingrediente.setActive(false);
+            ingredienteRepository.save(ingrediente);
+        }
     }
 
     @Transactional
     public void deleteById(Long id) {
-        ingredienteRepository.deleteById(id);
+        Ingrediente ingrediente = findById(id);
+        if (ingrediente != null) {
+            ingrediente.setActive(false);
+            ingredienteRepository.save(ingrediente);
+        }
     }
 }

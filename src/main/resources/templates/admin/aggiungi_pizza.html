@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Aggiungi Pizza</title>
+    <title>Aggiungi Nuova Pizza</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/style.css" rel="stylesheet">
 </head>
-<body>
+<body class="sticky-footer-layout">
     <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="/admin/dashboard">
@@ -19,9 +19,9 @@
     </nav>
 
     <div class="container mt-4">
-        <h1>Aggiungi una nuova Pizza</h1>
+        <h1>Aggiungi Nuova Pizza</h1>
 
-        <form action="/admin/salvaPizza" method="post" th:object="${pizza}" enctype="multipart/form-data">
+        <form th:action="@{/admin/salvaPizza}" method="post" th:object="${pizza}" enctype="multipart/form-data">
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -30,52 +30,45 @@
                         <small class="text-danger" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></small>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="descrizione" class="form-label">Descrizione:</label>
-                        <input type="text" class="form-control" id="descrizione" th:field="*{descrizione}" required>
-                        <small class="text-danger" th:if="${#fields.hasErrors('descrizione')}" th:errors="*{descrizione}"></small>
                     </div>
-                </div>
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="prezzoBase" class="form-label">Prezzo Base (€):</label>
                         <input type="number" step="0.01" class="form-control" id="prezzoBase" th:field="*{prezzoBase}" required>
                         <small class="text-danger" th:if="${#fields.hasErrors('prezzoBase')}" th:errors="*{prezzoBase}"></small>
                     </div>
-					
                 </div>
             </div>
 
-			<div class="mb-3">
-			    <h2>Ingredienti Base:</h2>
-			    <label for="ingredientiBaseText" class="form-label">Inserisci gli ingredienti base (separati da virgola):</label>
-			    <input type="text" class="form-control" id="ingredientiBaseText" name="ingredientiBaseText" required>
-			    <small class="form-text text-muted">Inserisci i nomi degli ingredienti base, separati da una virgola.</small>
-			</div>
+            <div class="mb-3">
+                <h2>Seleziona Ingredienti Base:</h2>
+                <small class="form-text text-muted">Scegli gli ingredienti che compongono la base di questa pizza. Gli ingredienti non selezionati qui saranno considerati come possibili extra.</small>
+                <div class="row row-cols-2 row-cols-md-4 mt-2">
+                    <div th:each="ing : ${tuttiGliIngredienti}" class="form-check col">
+                        <input type="checkbox" class="form-check-input" name="ingredientiBaseIds" th:value="${ing.id}" th:id="'ingBase_' + ${ing.id}">
+                        <label class="form-check-label" th:for="'ingBase_' + ${ing.id}" th:text="${ing.nome}"></label>
+                    </div>
+                </div>
+                 <small class="text-danger" th:if="${#fields.hasErrors('ingredientiBase')}" th:errors="*{ingredientiBase}"></small>
+            </div>
+            
+            <div class="mb-3">
+                <label for="percentualeSconto" class="form-label">Percentuale Sconto (%):</label>
+                <input type="number" step="1" class="form-control" id="percentualeSconto" name="percentualeSconto" min="0" max="100" value="0">
+                <small class="form-text text-muted">Inserisci la percentuale di sconto (0-100). Lascia 0 per nessuno sconto.</small>
+            </div>
 
-			<div class="mb-3">
-			    <h2>Ingredienti Extra (Opzionali):</h2>
-			    <label for="ingredientiExtraText" class="form-label">Inserisci gli ingredienti extra (separati da virgola):</label>
-			    <input type="text" class="form-control" id="ingredientiExtraText" name="ingredientiExtraText">
-			    <small class="form-text text-muted">Inserisci i nomi degli ingredienti extra (opzionali), separati da una virgola.</small>
-			</div>
-			
-			<div class="mb-3">
-			    <label for="percentualeSconto" class="form-label">Percentuale Sconto (%):</label>
-			    <input type="number" class="form-control" id="percentualeSconto" name="percentualeSconto" min="0" max="100" value="0">
-			    <small class="form-text text-muted">Inserisci la percentuale di sconto (0-100).</small>
-			</div>
-			
-			<div class="mb-3">
-			    <label for="imageFile" class="form-label">Immagine Pizza</label>
-			    <input type="file" class="form-control" id="imageFile" name="imageFile">
-			</div>
+            <div class="mb-3">
+                <label for="imageFile" class="form-label">Immagine Pizza:</label>
+                <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/jpeg, image/png">
+                <small class="form-text text-muted">Carica un'immagine per la pizza. Se non caricata, verrà usata un'immagine di default.</small>
+            </div>
 
-            <button type="submit" class="btn btn-primary">Salva</button>
+            <button type="submit" class="btn btn-primary">Aggiungi Pizza</button>
             <a th:href="@{/admin/dashboard}" class="btn btn-secondary">Annulla</a>
         </form>
 
-        <div th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger mt-3" role="alert" th:text="${errorMessage}"></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

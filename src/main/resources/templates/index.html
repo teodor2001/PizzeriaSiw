@@ -10,7 +10,7 @@
 	<link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 
-<body>
+<body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="/">
@@ -24,104 +24,122 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <h2 class="text-center text-danger mb-4">Le nostre pizze classiche</h2>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            <div class="col" th:each="pizza : ${pizzeClassiche}">
-                <div class="card h-100 shadow-sm pizza-card">
-                    <img th:src="@{/images/pizze/{nome}.jpg(nome=${pizza.nome})}" class="card-img-top"
-                         alt="Immagine di " th:alt-title="${pizza.nome}">
-						 <div class="card-body">
-						                             <h5 class="card-title text-danger" th:text="${pizza.nome}">Nome Pizza</h5>
-						                             
-						                             <p class="fw-bold">Prezzo: €<span th:text="${#numbers.formatDecimal(pizza.prezzoBase, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
-						                             
-						                             <p class="text-muted small">
-						                                 Ingredienti Base: [<span th:text="${#strings.listJoin(pizza.ingredientiBase.![nome], ', ')}"></span>]
-						                             </p>
-						                             
-						                             <p class="text-muted small" th:if="${not #lists.isEmpty(pizza.ingredientiExtra)}">
-						                                 Potenziali Extra: [+<span th:text="${#strings.listJoin(pizza.ingredientiExtra.![nome], ', ')}"></span>]
-						                             </p>
-						                             <p class="text-muted small" th:unless="${not #lists.isEmpty(pizza.ingredientiExtra)}">
-						                                 Potenziali Extra: [nessuno]
-						                             </p>
-
-						                             <form th:action="@{/carrello/aggiungi}" method="post" class="mt-3">
-						                                 <input type="hidden" name="pizzaId" th:value="${pizza.idPizza}" />
-						                                 
-						                                 <div class="mb-2">
-						                                     <label th:for="${'quantita_classica_' + pizza.idPizza}" class="form-label form-label-sm visually-hidden">Quantità:</label>
-						                                     <input type="number" name="quantita" th:id="${'quantita_classica_' + pizza.idPizza}" value="1" min="1" class="form-control form-control-sm d-inline-block" style="width: 70px;"/>
-						                                 </div>
-
-						                                 <div class="mb-2" th:if="${tuttiGliIngredientiExtra != null and not #lists.isEmpty(tuttiGliIngredientiExtra)}">
-						                                     <label class="form-label form-label-sm">Aggiungi Extra (Opzionali):</label>
-						                                     <div class="border rounded p-2" style="max-height: 100px; overflow-y: auto;">
-						                                         <div th:each="extra : ${tuttiGliIngredientiExtra}" class="form-check form-check-sm">
-						                                             <input class="form-check-input" type="checkbox" name="ingredientiExtraIds" th:value="${extra.id}" th:id="${'extra_classica_' + pizza.idPizza + '_' + extra.id}">
-						                                             <label class="form-check-label" th:for="${'extra_classica_' + pizza.idPizza + '_' + extra.id}" 
-						                                                    th:text="${extra.nome} + (${extra.prezzo != null && extra.prezzo > 0} ? ' (+€' + ${#numbers.formatDecimal(extra.prezzo, 1, 'COMMA', 2, 'POINT')} + ')' : '')">
-						                                                 Nome Extra (+€Prezzo)
-						                                             </label>
-						                                         </div>
-						                                     </div>
-						                                 </div>
-						                                 
-						                                 <button type="submit" class="btn btn-warning btn-sm mt-2 w-100">
-						                                     <i class="bi bi-cart-plus"></i> Aggiungi al Carrello
-						                                 </button>
-						                             </form>
-						                         </div>
-                </div>
-            </div>
-        </div>
-
-        <h2 class="text-center text-danger mt-5 mb-4">Le nostre bevande</h2>
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-            <div class="col" th:each="bevanda : ${bevande}">
-                <div class="card h-100 shadow-sm bevanda-card">
-                    <div class="card-body">
-                        <h5 class="card-title text-danger" th:text="${bevanda.nome}">Nome Bevanda</h5>
-                        <p class="fw-bold">Prezzo: €<span th:text="${bevanda.prezzo}">0.00</span></p>
-                        <p class="text-muted small">Quantità: <span th:text="${#numbers.formatDecimal(bevanda.quantità, 0, 'COMMA', 1, 'POINT')}">0.0</span> L</p>
+    <div class="flex-grow-1">
+        <div class="container mt-4">
+            <h2 class="text-center text-danger mb-4">Le nostre pizze classiche</h2>
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <div class="col" th:each="pizza : ${pizzeClassiche}">
+                    <div class="card h-100 shadow-sm pizza-card">
+                        <img th:if="${pizza.imageUrl != null && !pizza.imageUrl.isEmpty()}"
+                             th:src="@{${pizza.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" class="card-img-top"
+                             th:alt-title="${pizza.nome}"
+                             onerror="this.onerror=null; this.src='/images/pizze/Default.jpg';">
+                        <img th:unless="${pizza.imageUrl != null && !pizza.imageUrl.isEmpty()}"
+                             th:src="@{/images/pizze/Default.jpg}" class="card-img-top"
+                             th:alt-title="${pizza.nome}">
+                        <div class="card-body d-flex flex-column"> <h5 class="card-title text-danger" th:text="${pizza.nome}">Nome Pizza</h5>
+                            <p class="fw-bold">Prezzo: €<span th:text="${#numbers.formatDecimal(pizza.prezzoBase, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                            <p class="text-muted small">
+                                Ingredienti Base: [<span th:text="${#strings.listJoin(pizza.ingredientiBase.![nome], ', ')}"></span>]
+                            </p>
+                            <p class="text-muted small" th:if="${pizza.ingredientiExtraDisponibili != null and not #sets.isEmpty(pizza.ingredientiExtraDisponibili)}">
+                                Potenziali Extra: [+<span th:text="${#strings.listJoin(pizza.ingredientiExtraDisponibili.![nome], ', ')}"></span>]
+                            </p>
+                            <p class="text-muted small" th:unless="${pizza.ingredientiExtraDisponibili != null and not #sets.isEmpty(pizza.ingredientiExtraDisponibili)}">
+                                Potenziali Extra: [nessuno]
+                            </p>
+                            <div class="mt-auto"> <form th:action="@{/carrello/aggiungiPizza}" method="post" class="mt-3">
+                                    <input type="hidden" name="pizzaId" th:value="${pizza.idPizza}" />
+                                    <div class="mb-2">
+                                        <label th:for="${'quantita_classica_' + pizza.idPizza}" class="form-label form-label-sm visually-hidden">Quantità:</label>
+                                        <input type="number" name="quantita" th:id="${'quantita_classica_' + pizza.idPizza}" value="1" min="1" class="form-control form-control-sm d-inline-block" style="width: 70px;"/>
+                                    </div>
+                                    <button type="submit" class="btn btn-warning btn-sm mt-2 w-100">
+                                        <i class="bi bi-cart-plus"></i> Aggiungi al Carrello
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <h2 class="text-center text-danger mt-5 mb-4">I nostri ingredienti extra</h2>
-        <div class="row row-cols-1 row-cols-md-4 g-4">
-            <div class="col" th:each="ingredienteExtra : ${ingredientiExtra}">
-                <div class="card h-100 shadow-sm ingrediente-card">
-                    <div class="card-body">
-                        <h5 class="card-title text-danger" th:text="${ingredienteExtra.nome}">Nome Ingrediente</h5>
-                        <p class="fw-bold">Prezzo: €<span th:text="${ingredienteExtra.prezzo}">0.00</span></p>
+            <h2 class="text-center text-danger mt-5 mb-4">Le nostre bevande</h2>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4"> <div class="col" th:each="bevanda : ${bevande}">
+                    <div class="card h-100 shadow-sm bevanda-card"> <img th:if="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty()}"
+                             th:src="@{${bevanda.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" class="card-img-top bevanda-card-img" th:alt-title="${bevanda.nome}"
+                             onerror="this.onerror=null; this.src='/images/bevande/DefaultBevanda.jpg';">
+                        <img th:unless="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty()}"
+                             th:src="@{/images/bevande/DefaultBevanda.jpg}" class="card-img-top bevanda-card-img"
+                             th:alt-title="${bevanda.nome}">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-danger" th:text="${bevanda.nome}">Nome Bevanda</h5>
+                            <p class="fw-bold">Prezzo: €<span th:text="${#numbers.formatDecimal(bevanda.prezzo, 0, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                            <p class="text-muted small">Quantità: <span th:text="${#numbers.formatDecimal(bevanda.quantità, 0, 'COMMA', 1, 'POINT')}">0.0</span> L</p>
+                            <div class="mt-auto">
+                                <form th:action="@{/carrello/aggiungiBevanda}" method="post" class="mt-3">
+                                   <input type="hidden" name="bevandaId" th:value="${bevanda.id}" />
+                                   <div class="mb-2">
+                                       <label th:for="${'quantita_bevanda_index_' + bevanda.id}" class="form-label form-label-sm visually-hidden">Quantità:</label>
+                                       <input type="number" name="quantita" th:id="${'quantita_bevanda_index_' + bevanda.id}" value="1" min="1" class="form-control form-control-sm d-inline-block" style="width: 70px;"/>
+                                   </div>
+                                   <button type="submit" class="btn btn-warning btn-sm mt-2 w-100">
+                                       <i class="bi bi-cart-plus"></i> Aggiungi al Carrello
+                                   </button>
+                               </form>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-center text-danger mt-5 mb-4">I nostri ingredienti extra</h2>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+                <div class="col" th:each="ingredienteExtra : ${tuttiGliIngredientiExtra}">
+                    <div class="card h-100 shadow-sm ingrediente-card">
+                        <img th:if="${ingredienteExtra.imageUrl != null && !ingredienteExtra.imageUrl.isEmpty()}"
+                             th:src="@{${ingredienteExtra.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" class="card-img-top ingrediente-card-img" 
+                             th:alt-title="${ingredienteExtra.nome}"
+                             onerror="this.onerror=null; this.src='/images/ingredienti/DefaultIngrediente.jpg';">
+                        <img th:unless="${ingredienteExtra.imageUrl != null && !ingredienteExtra.imageUrl.isEmpty()}"
+                             th:src="@{/images/ingredienti/DefaultIngrediente.jpg}" class="card-img-top ingrediente-card-img"
+                             th:alt-title="${ingredienteExtra.nome}">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger" th:text="${ingredienteExtra.nome}">Nome Ingrediente</h5>
+                            <p class="fw-bold">Prezzo: €<span th:text="${#numbers.formatDecimal(ingredienteExtra.prezzo, 0, 'COMMA', 2, 'POINT')}">0.00</span></p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <footer class="bg-danger text-white py-3 mt-5">
+    <footer class="bg-danger text-white py-3 mt-auto">
         <div class="container text-center">
             <h4>Contattaci</h4>
-            <p>
+            <p th:if="${pizzeria != null}">
                 <span th:text="${pizzeria.nome}">Nome Pizzeria</span><br>
                 Indirizzo: <span th:text="${pizzeria.indirizzo}">Via</span>, <span th:text="${pizzeria.citta}">Città</span><br>
                 Telefono: <span th:text="${pizzeria.telefono}">Numero di Telefono</span><br>
                 Email: <span th:text="${pizzeria.email}">Email</span>
             </p>
+            <p th:unless="${pizzeria != null}">
+                Antica Pizzeria Romana <br>
+                Informazioni di contatto non disponibili.
+            </p>
         </div>
     </footer>
-	
+
 	<div>
 	    <a th:href="@{/carrello}" class="cart-icon-fixed">
 	        <i class="bi bi-cart-fill"></i>
-	        </a>
+             <span th:if="${carrello != null and carrello.elementi != null and not #lists.isEmpty(carrello.elementi)}"
+                  class="badge bg-warning text-dark rounded-pill position-absolute top-0 start-100 translate-middle"
+                  th:text="${#lists.size(carrello.elementi)}">
+            </span>
+	    </a>
 	</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
 </html>

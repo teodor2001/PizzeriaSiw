@@ -5,6 +5,7 @@ import it.uniroma3.siw.model.Sconto;
 import it.uniroma3.siw.repository.PizzaRepository;
 import it.uniroma3.siw.repository.ScontoRepository;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +26,28 @@ public class PizzaService {
 		return pizzaRepository.save(pizza);
 	}
 
+    @Transactional(readOnly = true)
 	public Pizza findById(Long id) {
 		Optional<Pizza> result = pizzaRepository.findById(id);
+        result.ifPresent(p -> {
+            Hibernate.initialize(p.getIngredientiBase());
+            if (p.getScontoApplicato() != null) {
+                Hibernate.initialize(p.getScontoApplicato());
+            }
+        });
 		return result.orElse(null);
 	}
 
+    @Transactional(readOnly = true) // Good practice for find methods
 	public List<Pizza> findAll() {
-		return (List<Pizza>) pizzaRepository.findAll();
+		List<Pizza> pizze = (List<Pizza>) pizzaRepository.findAll();
+        for (Pizza p : pizze) {
+            Hibernate.initialize(p.getIngredientiBase());
+            if (p.getScontoApplicato() != null) {
+                 Hibernate.initialize(p.getScontoApplicato());
+            }
+        }
+		return pizze;
 	}
 
 	@Transactional
@@ -44,17 +60,33 @@ public class PizzaService {
 		pizzaRepository.deleteById(id);
 	}
 
+	@Transactional(readOnly = true)
 	public List<Pizza> findByNome(String nome) {
-		return pizzaRepository.findByNome(nome);
+        List<Pizza> pizze = pizzaRepository.findByNome(nome);
+        for (Pizza p : pizze) {
+            Hibernate.initialize(p.getIngredientiBase());
+             if (p.getScontoApplicato() != null) {
+                 Hibernate.initialize(p.getScontoApplicato());
+            }
+        }
+		return pizze;
 	}
 
+	@Transactional(readOnly = true)
 	public List<Pizza> findByPrezzo(Double prezzoBase) {
-		return pizzaRepository.findByPrezzoBase(prezzoBase);
+        List<Pizza> pizze = pizzaRepository.findByPrezzoBase(prezzoBase);
+        for (Pizza p : pizze) {
+            Hibernate.initialize(p.getIngredientiBase());
+            if (p.getScontoApplicato() != null) {
+                 Hibernate.initialize(p.getScontoApplicato());
+            }
+        }
+		return pizze;
 	}
 
 	@Transactional
 	public void aggiungiScontoAPizza(Long pizzaId, Long scontoId) {
-		Pizza pizza = pizzaRepository.findById(pizzaId).orElse(null);
+		Pizza pizza = this.findById(pizzaId);
 		Sconto sconto = scontoRepository.findById(scontoId).orElse(null);
 
 		if (pizza != null && sconto != null) {
@@ -67,7 +99,7 @@ public class PizzaService {
 
 	@Transactional
 	public void rimuoviScontoDaPizza(Long pizzaId) {
-		Pizza pizza = pizzaRepository.findById(pizzaId).orElse(null);
+		Pizza pizza = this.findById(pizzaId);
 		if (pizza != null) {
 			pizza.setScontoApplicato(null);
 			pizzaRepository.save(pizza);
@@ -76,12 +108,19 @@ public class PizzaService {
 		}
 	}
 
+	@Transactional(readOnly = true)
 	public List<Pizza> getPizzeConSconto(Long scontoId) {
 		Sconto sconto = scontoRepository.findById(scontoId).orElse(null);
 		if (sconto != null) {
+            Hibernate.initialize(sconto.getPizze());
+            for(Pizza p : sconto.getPizze()){
+                Hibernate.initialize(p.getIngredientiBase());
+                if (p.getScontoApplicato() != null) {
+                     Hibernate.initialize(p.getScontoApplicato());
+                }
+            }
 			return sconto.getPizze();
 		}
-		return null;
+		return List.of();
 	}
-
 }

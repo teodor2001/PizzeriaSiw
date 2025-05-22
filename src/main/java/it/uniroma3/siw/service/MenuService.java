@@ -6,11 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class MenuService {
+
+    public static final String DEFAULT_MENU_NAME = "Menu Principale";
 
     @Autowired
     private MenuRepository menuRepository;
@@ -25,17 +26,22 @@ public class MenuService {
         return result.orElse(null);
     }
 
-    public List<Menu> findAll() {
-        return (List<Menu>) menuRepository.findAll();
+    public Iterable<Menu> findAll() { // Modificato per coerenza con CrudRepository
+        return menuRepository.findAll();
     }
 
-    // Metodo per recuperare la singola istanza di Menu (assumendo che ce ne sia solo una)
-    public Menu findFirstMenu() {
-        List<Menu> allMenus = (List<Menu>) menuRepository.findAll();
-        if (!allMenus.isEmpty()) {
-            return allMenus.get(0);
+    @Transactional
+    public Menu getOrCreateDefaultMenu() {
+        Optional<Menu> menuOptional = menuRepository.findByNome(DEFAULT_MENU_NAME);
+
+        if (menuOptional.isPresent()) {
+            return menuOptional.get();
+        } else {
+            Menu newMenu = new Menu();
+            newMenu.setNome(DEFAULT_MENU_NAME);
+            newMenu.setDescrizione("Il nostro menu ufficiale della pizzeria.");
+            return menuRepository.save(newMenu);
         }
-        return null; // Restituisce null se non viene trovato alcun menu (gestito nel controller)
     }
 
     @Transactional

@@ -4,9 +4,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 public class Pizza {
@@ -18,8 +19,6 @@ public class Pizza {
     @NotBlank(message = "Il nome è obbligatorio")
     private String nome;
 
-    private String descrizione;
-
     @NotNull(message = "Il prezzo base è obbligatorio")
     @DecimalMin(value = "0.01", message = "Il prezzo base deve essere maggiore di 0")
     private double prezzoBase;
@@ -30,39 +29,33 @@ public class Pizza {
         joinColumns = @JoinColumn(name = "pizza_id"),
         inverseJoinColumns = @JoinColumn(name = "ingrediente_id")
     )
-    private List<Ingrediente> ingredientiBase = new ArrayList<>();
+    private Set<Ingrediente> ingredientiBase = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "sconto_id")
-    private Sconto scontoApplicato = new Sconto();
+    private Sconto scontoApplicato;
 
-    @ManyToMany
-    @JoinTable(name = "pizza_ingrediente_extra", joinColumns = @JoinColumn(name = "pizza_id"), inverseJoinColumns = @JoinColumn(name = "ingrediente_id"))
-    private List<Ingrediente> ingredientiExtra = new ArrayList<>();
+    @Transient
+    private Set<Ingrediente> ingredientiExtraDisponibili;
 
     @ManyToOne
     @JoinColumn(name = "menu_id")
     private Menu menu;
-    
+
     private String imageUrl;
 
     @Transient
-    private double prezzoConExtra;
-    @Transient
     private double prezzoScontato;
 
-    // Costruttori
     public Pizza() {
     }
 
-    public Pizza(String nome, String descrizione, double prezzoBase, List<Ingrediente> ingredientiBase) {
+    public Pizza(String nome, double prezzoBase, Set<Ingrediente> ingredientiBase) {
         this.nome = nome;
-        this.descrizione = descrizione;
         this.prezzoBase = prezzoBase;
-        this.ingredientiBase = ingredientiBase;
+        this.ingredientiBase = ingredientiBase != null ? ingredientiBase : new HashSet<>();
     }
 
-    
     public String getImageUrl() {
         return imageUrl;
     }
@@ -70,8 +63,6 @@ public class Pizza {
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
-
-
 
     public Long getIdPizza() {
         return idPizza;
@@ -89,14 +80,6 @@ public class Pizza {
         this.nome = nome;
     }
 
-    public String getDescrizione() {
-        return descrizione;
-    }
-
-    public void setDescrizione(String descrizione) {
-        this.descrizione = descrizione;
-    }
-
     public double getPrezzoBase() {
         return prezzoBase;
     }
@@ -105,11 +88,11 @@ public class Pizza {
         this.prezzoBase = prezzoBase;
     }
 
-    public List<Ingrediente> getIngredientiBase() {
+    public Set<Ingrediente> getIngredientiBase() {
         return ingredientiBase;
     }
 
-    public void setIngredientiBase(List<Ingrediente> ingredientiBase) {
+    public void setIngredientiBase(Set<Ingrediente> ingredientiBase) {
         this.ingredientiBase = ingredientiBase;
     }
 
@@ -121,12 +104,16 @@ public class Pizza {
         this.scontoApplicato = scontoApplicato;
     }
 
-    public List<Ingrediente> getIngredientiExtra() {
-        return ingredientiExtra;
+    public Set<Ingrediente> getIngredientiExtraDisponibili() {
+        return ingredientiExtraDisponibili;
     }
 
-    public void setIngredientiExtra(List<Ingrediente> ingredientiExtra) {
-        this.ingredientiExtra = ingredientiExtra;
+    public void setIngredientiExtraDisponibili(Set<Ingrediente> tuttiGliIngredienti) {
+        if (tuttiGliIngredienti == null) {
+            this.ingredientiExtraDisponibili = new HashSet<>();
+        } else {
+            this.ingredientiExtraDisponibili = new HashSet<>(tuttiGliIngredienti);
+        }
     }
 
     public Menu getMenu() {
@@ -137,26 +124,11 @@ public class Pizza {
         this.menu = menu;
     }
 
-    public double getPrezzoConExtra() {
-        return prezzoBase + ingredientiExtra.stream().mapToDouble(Ingrediente::getPrezzo).sum();
-    }
-
     public double getPrezzoScontato() {
-        double prezzoAttuale = getPrezzoConExtra();
-        if (scontoApplicato != null) {
-            return prezzoAttuale * (1 - (scontoApplicato.getPercentuale() / 100));
+        if (scontoApplicato != null && scontoApplicato.getPercentuale() > 0) {
+            return prezzoBase * (1 - (scontoApplicato.getPercentuale() / 100.0));
         }
-        return prezzoAttuale;
-    }
-
-    public void aggiungiIngredienteExtra(Ingrediente ingrediente) {
-        this.ingredientiExtra.add(ingrediente);
-        ingrediente.getPizzeExtra().add(this);
-    }
-
-    public void rimuoviIngredienteExtra(Ingrediente ingrediente) {
-        this.ingredientiExtra.remove(ingrediente);
-        ingrediente.getPizzeExtra().remove(this);
+        return prezzoBase;
     }
 
     @Override
@@ -164,11 +136,12 @@ public class Pizza {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Pizza pizza = (Pizza) o;
-        return Double.compare(pizza.prezzoBase, prezzoBase) == 0 && Double.compare(pizza.prezzoConExtra, prezzoConExtra) == 0 && Double.compare(pizza.prezzoScontato, prezzoScontato) == 0 && Objects.equals(idPizza, pizza.idPizza) && Objects.equals(nome, pizza.nome) && Objects.equals(descrizione, pizza.descrizione) && Objects.equals(ingredientiBase, pizza.ingredientiBase) && Objects.equals(scontoApplicato, pizza.scontoApplicato) && Objects.equals(ingredientiExtra, pizza.ingredientiExtra) && Objects.equals(menu, pizza.menu);
+        return Objects.equals(idPizza, pizza.idPizza) &&
+               Objects.equals(nome, pizza.nome);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idPizza, nome, descrizione, prezzoBase, ingredientiBase, scontoApplicato, ingredientiExtra, menu, prezzoConExtra, prezzoScontato);
+        return Objects.hash(idPizza, nome);
     }
 }
