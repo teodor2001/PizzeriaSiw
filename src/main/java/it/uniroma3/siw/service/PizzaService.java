@@ -30,7 +30,7 @@ public class PizzaService {
 	public Pizza findById(Long id) {
 		Optional<Pizza> result = pizzaRepository.findById(id);
         result.ifPresent(p -> {
-            Hibernate.initialize(p.getIngredientiBase());
+            Hibernate.initialize(p.getNomiIngredientiBase()); 
             if (p.getScontoApplicato() != null) {
                 Hibernate.initialize(p.getScontoApplicato());
             }
@@ -38,11 +38,11 @@ public class PizzaService {
 		return result.orElse(null);
 	}
 
-    @Transactional(readOnly = true) // Good practice for find methods
+    @Transactional(readOnly = true) 
 	public List<Pizza> findAll() {
 		List<Pizza> pizze = (List<Pizza>) pizzaRepository.findAll();
         for (Pizza p : pizze) {
-            Hibernate.initialize(p.getIngredientiBase());
+            Hibernate.initialize(p.getNomiIngredientiBase()); 
             if (p.getScontoApplicato() != null) {
                  Hibernate.initialize(p.getScontoApplicato());
             }
@@ -64,7 +64,7 @@ public class PizzaService {
 	public List<Pizza> findByNome(String nome) {
         List<Pizza> pizze = pizzaRepository.findByNome(nome);
         for (Pizza p : pizze) {
-            Hibernate.initialize(p.getIngredientiBase());
+            Hibernate.initialize(p.getNomiIngredientiBase()); 
              if (p.getScontoApplicato() != null) {
                  Hibernate.initialize(p.getScontoApplicato());
             }
@@ -73,10 +73,10 @@ public class PizzaService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<Pizza> findByPrezzo(Double prezzoBase) {
+	public List<Pizza> findByPrezzoBase(Double prezzoBase) {
         List<Pizza> pizze = pizzaRepository.findByPrezzoBase(prezzoBase);
         for (Pizza p : pizze) {
-            Hibernate.initialize(p.getIngredientiBase());
+            Hibernate.initialize(p.getNomiIngredientiBase());
             if (p.getScontoApplicato() != null) {
                  Hibernate.initialize(p.getScontoApplicato());
             }
@@ -114,7 +114,7 @@ public class PizzaService {
 		if (sconto != null) {
             Hibernate.initialize(sconto.getPizze());
             for(Pizza p : sconto.getPizze()){
-                Hibernate.initialize(p.getIngredientiBase());
+                Hibernate.initialize(p.getNomiIngredientiBase());
                 if (p.getScontoApplicato() != null) {
                      Hibernate.initialize(p.getScontoApplicato());
                 }

@@ -16,9 +16,9 @@ import it.uniroma3.siw.service.MenuService;
 import it.uniroma3.siw.service.PizzaService;
 import it.uniroma3.siw.service.PizzeriaService;
 import it.uniroma3.siw.service.ScontoService;
+import it.uniroma3.siw.service.S3Service;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -33,16 +33,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -72,34 +67,8 @@ public class AdminController {
     @Autowired
     private CarrelloRepository carrelloRepository;
 
-    @Value("${upload.directory}")
-    private String uploadDirectoryPizze;
-
-    @Value("${upload.directory.bevande}")
-    private String uploadDirectoryBevande;
-
-    @Value("${upload.directory.ingredienti}")
-    private String uploadDirectoryIngredienti;
-
-
-    private String getFileExtension(String fileName) {
-        if (fileName == null || fileName.lastIndexOf(".") == -1) {
-            return "jpg";
-        }
-        return fileName.substring(fileName.lastIndexOf(".") + 1).toLowerCase();
-    }
-
-    private void deleteImageFile(String directory, String imageUrl, String defaultImageUrlPrefix) {
-        if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.startsWith(defaultImageUrlPrefix)) {
-            try {
-                String filenameWithPrefix = imageUrl.substring(imageUrl.lastIndexOf("/") + 1);
-                Path imagePath = Paths.get(directory, filenameWithPrefix);
-                Files.deleteIfExists(imagePath);
-            } catch (IOException e) {
-                System.err.println("Error deleting image file " + imageUrl + ": " + e.getMessage());
-            }
-        }
-    }
+    @Autowired
+    private S3Service s3Service;
 
     @GetMapping("/dashboard")
     public String adminDashboard(Model model) {
@@ -134,11 +103,14 @@ public class AdminController {
             return "admin/aggiungi_pizza";
         }
 
-        Set<Ingrediente> ingredientiBaseSelezionati = new HashSet<>();
+        Set<String> nomiDegliIngredientiBaseSelezionati = new HashSet<>();
         if (ingredientiBaseIds != null && !ingredientiBaseIds.isEmpty()) {
-            ingredientiBaseSelezionati = ingredienteService.findAllById(ingredientiBaseIds);
+            Set<Ingrediente> ingredientiSelezionatiOggetti = ingredienteService.findAllById(ingredientiBaseIds);
+            for (Ingrediente ing : ingredientiSelezionatiOggetti) {
+                nomiDegliIngredientiBaseSelezionati.add(ing.getNome());
+            }
         }
-        pizza.setIngredientiBase(ingredientiBaseSelezionati);
+        pizza.setNomiIngredientiBase(nomiDegliIngredientiBaseSelezionati);
 
         if (percentualeSconto != null && percentualeSconto > 0) {
             Sconto sconto = new Sconto();
@@ -151,19 +123,15 @@ public class AdminController {
 
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
-                String sanitizedPizzaName = pizza.getNome() != null ? pizza.getNome().replaceAll("[^a-zA-Z0-9.-]", "_") : "pizza_sconosciuta";
-                String fileName = sanitizedPizzaName + "." + getFileExtension(imageFile.getOriginalFilename());
-                Path filePath = Paths.get(uploadDirectoryPizze, fileName);
-                Files.createDirectories(filePath.getParent());
-                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                pizza.setImageUrl("/images/pizze/" + fileName);
+                String s3FileUrl = s3Service.uploadFile("pizze", imageFile.getOriginalFilename(), imageFile);
+                pizza.setImageUrl(s3FileUrl);
             } catch (IOException e) {
-                model.addAttribute("errorMessage", "Errore durante il caricamento dell'immagine: " + e.getMessage());
+                bindingResult.rejectValue("imageUrl", "uploadError", "Errore upload immagine: " + e.getMessage());
                 model.addAttribute("tuttiGliIngredienti", ingredienteService.findAll());
                 return "admin/aggiungi_pizza";
             }
         } else {
-            pizza.setImageUrl("/images/pizze/Default.jpg");
+            pizza.setImageUrl(null); 
         }
 
         Menu menu = menuService.getOrCreateDefaultMenu();
@@ -181,7 +149,7 @@ public class AdminController {
             if (pizzaDaModificare.getScontoApplicato() != null) {
                 model.addAttribute("percentualeScontoAttuale", pizzaDaModificare.getScontoApplicato().getPercentuale());
             } else {
-                model.addAttribute("percentualeScontoAttuale", 0.0f);
+                model.addAttribute("percentualeScontoAttuale", 0);
             }
             return "admin/modifica_pizza";
         } else {
@@ -193,92 +161,55 @@ public class AdminController {
     public String salvaModifichePizza(@Valid @ModelAttribute("pizza") Pizza pizzaModificata, BindingResult bindingResult,
                                       @RequestParam(value = "ingredientiBaseIds", required = false) List<Long> ingredientiBaseIds,
                                       @RequestParam(name = "imageFile", required = false) MultipartFile imageFile,
-                                      @RequestParam(required = false) Float percentualeSconto, Model model) {
+                                      @RequestParam(value= "percentualeSconto", required = false) Integer percentualeSconto, Model model) {
 
         Pizza pizzaOriginale = pizzaService.findById(pizzaModificata.getIdPizza());
         if (pizzaOriginale == null) {
-            model.addAttribute("errorMessage", "Errore: Pizza originale non trovata per ID: " + pizzaModificata.getIdPizza());
-            model.addAttribute("tuttiGliIngredienti", ingredienteService.findAll());
-            model.addAttribute("pizza", pizzaModificata);
-             if (percentualeSconto != null) {
-                model.addAttribute("percentualeScontoAttuale", percentualeSconto);
-            } else {
-                model.addAttribute("percentualeScontoAttuale", 0.0f);
-            }
-            return "admin/modifica_pizza";
+            return "redirect:/admin/dashboard";
         }
 
         if (bindingResult.hasFieldErrors("nome") || bindingResult.hasFieldErrors("prezzoBase")) {
             model.addAttribute("tuttiGliIngredienti", ingredienteService.findAll());
-            if (imageFile == null || imageFile.isEmpty()) {
-                pizzaModificata.setImageUrl(pizzaOriginale.getImageUrl());
-            }
-            if (percentualeSconto != null) {
-                 model.addAttribute("percentualeScontoAttuale", percentualeSconto);
+            pizzaModificata.setImageUrl(pizzaOriginale.getImageUrl()); 
+             if (percentualeSconto != null) {
+                model.addAttribute("percentualeScontoAttuale", percentualeSconto);
             } else if (pizzaOriginale.getScontoApplicato() != null) {
-                 model.addAttribute("percentualeScontoAttuale", pizzaOriginale.getScontoApplicato().getPercentuale());
+                model.addAttribute("percentualeScontoAttuale", pizzaOriginale.getScontoApplicato().getPercentuale());
             } else {
-                 model.addAttribute("percentualeScontoAttuale", 0.0f);
+                model.addAttribute("percentualeScontoAttuale", 0);
             }
             return "admin/modifica_pizza";
         }
-
-        String oldImageUrl = pizzaOriginale.getImageUrl();
-        String newSanitizedName = pizzaModificata.getNome() != null ? pizzaModificata.getNome().replaceAll("[^a-zA-Z0-9.-]", "_") : "pizza_sconosciuta";
-
+        
         pizzaOriginale.setNome(pizzaModificata.getNome());
-        pizzaOriginale.setPrezzoBase(pizzaModificata.getPrezzoBase());
+        pizzaOriginale.setPrezzoBase(pizzaModificata.getPrezzoBase()); 
 
         if (imageFile != null && !imageFile.isEmpty()) {
-            deleteImageFile(uploadDirectoryPizze, oldImageUrl, "/images/pizze/Default.jpg");
             try {
-                String newFileName = newSanitizedName + "." + getFileExtension(imageFile.getOriginalFilename());
-                Path filePath = Paths.get(uploadDirectoryPizze, newFileName);
-                Files.createDirectories(filePath.getParent());
-                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                pizzaOriginale.setImageUrl("/images/pizze/" + newFileName);
+                String newS3FileUrl = s3Service.uploadFile("pizze", imageFile.getOriginalFilename(), imageFile);
+                pizzaOriginale.setImageUrl(newS3FileUrl);
             } catch (IOException e) {
-                model.addAttribute("errorMessage", "Errore durante il caricamento della nuova immagine: " + e.getMessage());
+                bindingResult.rejectValue("imageUrl", "uploadError", "Errore upload nuova immagine: " + e.getMessage());
                 model.addAttribute("tuttiGliIngredienti", ingredienteService.findAll());
-                pizzaModificata.setImageUrl(oldImageUrl);
-                model.addAttribute("pizza", pizzaModificata);
                  if (percentualeSconto != null) {
                     model.addAttribute("percentualeScontoAttuale", percentualeSconto);
                 } else if (pizzaOriginale.getScontoApplicato() != null) {
                     model.addAttribute("percentualeScontoAttuale", pizzaOriginale.getScontoApplicato().getPercentuale());
                 } else {
-                     model.addAttribute("percentualeScontoAttuale", 0.0f);
+                    model.addAttribute("percentualeScontoAttuale", 0);
                 }
                 return "admin/modifica_pizza";
             }
-        } else {
-             if (!newSanitizedName.equals(pizzaOriginale.getNome().replaceAll("[^a-zA-Z0-9.-]", "_")) &&
-                oldImageUrl != null && !oldImageUrl.equals("/images/pizze/Default.jpg")) {
-                try {
-                    String oldFileNameOnly = oldImageUrl.substring(oldImageUrl.lastIndexOf("/") + 1);
-                    Path oldPath = Paths.get(uploadDirectoryPizze, oldFileNameOnly);
-                    String newFileNameOnly = newSanitizedName + "." + getFileExtension(oldFileNameOnly);
-                    Path newPath = Paths.get(uploadDirectoryPizze, newFileNameOnly);
-                    if (Files.exists(oldPath)) {
-                         Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
-                         pizzaOriginale.setImageUrl("/images/pizze/" + newFileNameOnly);
-                    } else {
-                         pizzaOriginale.setImageUrl(pizzaModificata.getImageUrl());
-                    }
-                } catch (IOException e) {
-                     System.err.println("Errore durante la rinomina dell'immagine: " + e.getMessage());
-                     pizzaOriginale.setImageUrl(pizzaModificata.getImageUrl());
-                }
-            } else {
-                 pizzaOriginale.setImageUrl(pizzaModificata.getImageUrl());
-            }
         }
 
-        Set<Ingrediente> ingredientiBaseSelezionati = new HashSet<>();
+        Set<String> nuoviNomiIngredientiBase = new HashSet<>();
         if (ingredientiBaseIds != null && !ingredientiBaseIds.isEmpty()) {
-            ingredientiBaseSelezionati = ingredienteService.findAllById(ingredientiBaseIds);
+            Set<Ingrediente> nuoviIngredientiSelezionatiOggetti = ingredienteService.findAllById(ingredientiBaseIds);
+            for (Ingrediente ing : nuoviIngredientiSelezionatiOggetti) {
+                nuoviNomiIngredientiBase.add(ing.getNome());
+            }
         }
-        pizzaOriginale.setIngredientiBase(ingredientiBaseSelezionati);
+        pizzaOriginale.setNomiIngredientiBase(nuoviNomiIngredientiBase);
 
         Sconto scontoEsistente = pizzaOriginale.getScontoApplicato();
         if (percentualeSconto != null && percentualeSconto > 0) {
@@ -287,7 +218,7 @@ public class AdminController {
                 scontoDaApplicare = scontoEsistente;
             } else {
                 scontoDaApplicare = new Sconto();
-                scontoDaApplicare.setPercentuale(Math.round(percentualeSconto));
+                scontoDaApplicare.setPercentuale(percentualeSconto); 
                 scontoService.creaSconto(scontoDaApplicare);
             }
             pizzaOriginale.setScontoApplicato(scontoDaApplicare);
@@ -304,8 +235,6 @@ public class AdminController {
     public String eliminaPizza(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         Pizza pizza = pizzaService.findById(id);
         if (pizza != null) {
-            deleteImageFile(uploadDirectoryPizze, pizza.getImageUrl(), "/images/pizze/Default.jpg");
-
             List<ElementoCarrello> elementiConPizza = elementoCarrelloRepository.findByPizzaIdPizza(id);
             for (ElementoCarrello elemento : new ArrayList<>(elementiConPizza)) {
                 Carrello carrelloAssociato = elemento.getCarrello();
@@ -323,10 +252,8 @@ public class AdminController {
             if (menu != null) {
                 Menu managedMenu = menuService.findById(menu.getId());
                 if (managedMenu != null) {
-                    boolean removed = managedMenu.getPizze().removeIf(p -> p.getIdPizza().equals(id));
-                    if (removed) {
-                        menuService.save(managedMenu);
-                    }
+                    managedMenu.getPizze().removeIf(p -> p.getIdPizza().equals(id));
+                    menuService.save(managedMenu);
                 }
             }
 
@@ -354,18 +281,14 @@ public class AdminController {
 
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
-                String sanitizedBevandaName = bevanda.getNome() != null ? bevanda.getNome().replaceAll("[^a-zA-Z0-9.-]", "_") : "bevanda_sconosciuta";
-                String fileName = sanitizedBevandaName + "." + getFileExtension(imageFile.getOriginalFilename());
-                Path filePath = Paths.get(uploadDirectoryBevande, fileName);
-                Files.createDirectories(filePath.getParent());
-                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                bevanda.setImageUrl("/images/bevande/" + fileName);
+                String s3FileUrl = s3Service.uploadFile("bevande", imageFile.getOriginalFilename(), imageFile);
+                bevanda.setImageUrl(s3FileUrl);
             } catch (IOException e) {
-                model.addAttribute("errorMessage", "Errore durante il caricamento dell'immagine della bevanda: " + e.getMessage());
+                bindingResult.rejectValue("imageUrl", "uploadError", "Errore upload immagine: " + e.getMessage());
                 return "admin/aggiungi_bevanda";
             }
         } else {
-            bevanda.setImageUrl("/images/bevande/DefaultBevanda.jpg");
+            bevanda.setImageUrl(null); 
         }
 
         Menu menu = menuService.getOrCreateDefaultMenu();
@@ -395,56 +318,26 @@ public class AdminController {
         Bevanda bevandaOriginale = bevandaService.findById(bevandaModificata.getId()).orElse(null);
         if (bevandaOriginale == null) {
             model.addAttribute("errorMessage", "Errore: Bevanda originale non trovata.");
-            return "admin/modifica_bevanda";
+            return "admin/modifica_bevanda"; 
         }
 
         if (bindingResult.hasErrors()) {
-            if (imageFile == null || imageFile.isEmpty()) {
-                bevandaModificata.setImageUrl(bevandaOriginale.getImageUrl());
-            }
+            bevandaModificata.setImageUrl(bevandaOriginale.getImageUrl());
             return "admin/modifica_bevanda";
         }
 
-        String oldImageUrl = bevandaOriginale.getImageUrl();
-        String newSanitizedName = bevandaModificata.getNome() != null ? bevandaModificata.getNome().replaceAll("[^a-zA-Z0-9.-]", "_") : "bevanda_sconosciuta";
-
         bevandaOriginale.setNome(bevandaModificata.getNome());
-        bevandaOriginale.setPrezzo(bevandaModificata.getPrezzo());
-        bevandaOriginale.setQuantità(bevandaModificata.getQuantità());
+        bevandaOriginale.setPrezzo(bevandaModificata.getPrezzo()); 
+        bevandaOriginale.setQuantità(bevandaModificata.getQuantità()); 
 
         if (imageFile != null && !imageFile.isEmpty()) {
-            deleteImageFile(uploadDirectoryBevande, oldImageUrl, "/images/bevande/DefaultBevanda.jpg");
             try {
-                String newFileName = newSanitizedName + "." + getFileExtension(imageFile.getOriginalFilename());
-                Path filePath = Paths.get(uploadDirectoryBevande, newFileName);
-                Files.createDirectories(filePath.getParent());
-                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                bevandaOriginale.setImageUrl("/images/bevande/" + newFileName);
+                String newS3FileUrl = s3Service.uploadFile("bevande", imageFile.getOriginalFilename(), imageFile);
+                bevandaOriginale.setImageUrl(newS3FileUrl);
             } catch (IOException e) {
-                model.addAttribute("errorMessage", "Errore durante il caricamento della nuova immagine: " + e.getMessage());
-                bevandaModificata.setImageUrl(oldImageUrl);
+                bindingResult.rejectValue("imageUrl", "uploadError", "Errore upload nuova immagine: " + e.getMessage());
+                bevandaModificata.setImageUrl(bevandaOriginale.getImageUrl()); 
                 return "admin/modifica_bevanda";
-            }
-        } else {
-            if (!newSanitizedName.equals(bevandaOriginale.getNome().replaceAll("[^a-zA-Z0-9.-]", "_")) &&
-                oldImageUrl != null && !oldImageUrl.equals("/images/bevande/DefaultBevanda.jpg")) {
-                try {
-                    String oldFileNameOnly = oldImageUrl.substring(oldImageUrl.lastIndexOf("/") + 1);
-                    Path oldPath = Paths.get(uploadDirectoryBevande, oldFileNameOnly);
-                    String newFileNameOnly = newSanitizedName + "." + getFileExtension(oldFileNameOnly);
-                    Path newPath = Paths.get(uploadDirectoryBevande, newFileNameOnly);
-                     if (Files.exists(oldPath)) {
-                         Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
-                         bevandaOriginale.setImageUrl("/images/bevande/" + newFileNameOnly);
-                     } else {
-                        bevandaOriginale.setImageUrl(bevandaModificata.getImageUrl());
-                     }
-                } catch (IOException e) {
-                     System.err.println("Errore durante la rinomina dell'immagine della bevanda: " + e.getMessage());
-                     bevandaOriginale.setImageUrl(bevandaModificata.getImageUrl());
-                }
-            } else {
-                 bevandaOriginale.setImageUrl(bevandaModificata.getImageUrl());
             }
         }
 
@@ -458,9 +351,6 @@ public class AdminController {
         Optional<Bevanda> bevandaOptional = bevandaService.findById(id);
         if (bevandaOptional.isPresent()) {
             Bevanda bevanda = bevandaOptional.get();
-
-            deleteImageFile(uploadDirectoryBevande, bevanda.getImageUrl(), "/images/bevande/DefaultBevanda.jpg");
-
             List<ElementoCarrello> elementiDaRimuovere = elementoCarrelloRepository.findByBevanda(bevanda);
             for (ElementoCarrello elemento : new ArrayList<>(elementiDaRimuovere)) {
                 Carrello carrelloAssociato = elemento.getCarrello();
@@ -478,10 +368,8 @@ public class AdminController {
             if (menu != null) {
                 Menu managedMenu = menuService.findById(menu.getId());
                 if (managedMenu != null) {
-                    boolean removed = managedMenu.getBevande().removeIf(b -> b.getId().equals(id));
-                    if(removed){
-                        menuService.save(managedMenu);
-                    }
+                    managedMenu.getBevande().removeIf(b -> b.getId().equals(id));
+                    menuService.save(managedMenu);
                 }
             }
 
@@ -511,22 +399,18 @@ public class AdminController {
 
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
-                String sanitizedIngredienteName = ingrediente.getNome() != null ? ingrediente.getNome().replaceAll("[^a-zA-Z0-9.-]", "_") : "ingrediente_sconosciuto";
-                String fileName = sanitizedIngredienteName + "." + getFileExtension(imageFile.getOriginalFilename());
-                Path filePath = Paths.get(uploadDirectoryIngredienti, fileName);
-                Files.createDirectories(filePath.getParent());
-                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                ingrediente.setImageUrl("/images/ingredienti/" + fileName);
+                String s3FileUrl = s3Service.uploadFile("ingredienti", imageFile.getOriginalFilename(), imageFile);
+                ingrediente.setImageUrl(s3FileUrl);
             } catch (IOException e) {
-                model.addAttribute("errorMessage", "Errore durante il caricamento dell'immagine dell'ingrediente: " + e.getMessage());
+                bindingResult.rejectValue("imageUrl", "uploadError", "Errore upload immagine: " + e.getMessage());
                 return "admin/aggiungi_ingrediente";
             }
         } else {
-            ingrediente.setImageUrl("/images/ingredienti/DefaultIngrediente.jpg");
+            ingrediente.setImageUrl(null); 
         }
 
-        Menu menu = menuService.getOrCreateDefaultMenu();
-        ingrediente.setMenu(menu);
+        Menu menu = menuService.getOrCreateDefaultMenu(); 
+        ingrediente.setMenu(menu); 
 
         ingredienteService.save(ingrediente);
         return "redirect:/admin/dashboard";
@@ -556,51 +440,22 @@ public class AdminController {
         }
 
         if (bindingResult.hasErrors()) {
-            if (imageFile == null || imageFile.isEmpty()) {
-                 ingredienteModificato.setImageUrl(ingredienteOriginale.getImageUrl());
-            }
+            ingredienteModificato.setImageUrl(ingredienteOriginale.getImageUrl());
             return "admin/modifica_ingrediente";
         }
 
-        String oldImageUrl = ingredienteOriginale.getImageUrl();
-        String newSanitizedName = ingredienteModificato.getNome() != null ? ingredienteModificato.getNome().replaceAll("[^a-zA-Z0-9.-]", "_") : "ingrediente_sconosciuto";
-
         ingredienteOriginale.setNome(ingredienteModificato.getNome());
-        ingredienteOriginale.setPrezzo(ingredienteModificato.getPrezzo());
+        ingredienteOriginale.setPrezzo(ingredienteModificato.getPrezzo()); 
+        // ingredienteOriginale.setOrigine(ingredienteModificato.getOrigine()); // Rimosso perché 'origine' non esiste
 
         if (imageFile != null && !imageFile.isEmpty()) {
-            deleteImageFile(uploadDirectoryIngredienti, oldImageUrl, "/images/ingredienti/DefaultIngrediente.jpg");
             try {
-                String newFileName = newSanitizedName + "." + getFileExtension(imageFile.getOriginalFilename());
-                Path filePath = Paths.get(uploadDirectoryIngredienti, newFileName);
-                Files.createDirectories(filePath.getParent());
-                Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                ingredienteOriginale.setImageUrl("/images/ingredienti/" + newFileName);
+                String newS3FileUrl = s3Service.uploadFile("ingredienti", imageFile.getOriginalFilename(), imageFile);
+                ingredienteOriginale.setImageUrl(newS3FileUrl);
             } catch (IOException e) {
-                model.addAttribute("errorMessage", "Errore durante il caricamento della nuova immagine: " + e.getMessage());
-                ingredienteModificato.setImageUrl(oldImageUrl);
+                bindingResult.rejectValue("imageUrl", "uploadError", "Errore upload nuova immagine: " + e.getMessage());
+                ingredienteModificato.setImageUrl(ingredienteOriginale.getImageUrl()); 
                 return "admin/modifica_ingrediente";
-            }
-        } else {
-            if (!newSanitizedName.equals(ingredienteOriginale.getNome().replaceAll("[^a-zA-Z0-9.-]", "_")) &&
-                oldImageUrl != null && !oldImageUrl.equals("/images/ingredienti/DefaultIngrediente.jpg")) {
-                try {
-                    String oldFileNameOnly = oldImageUrl.substring(oldImageUrl.lastIndexOf("/") + 1);
-                    Path oldPath = Paths.get(uploadDirectoryIngredienti, oldFileNameOnly);
-                    String newFileNameOnly = newSanitizedName + "." + getFileExtension(oldFileNameOnly);
-                    Path newPath = Paths.get(uploadDirectoryIngredienti, newFileNameOnly);
-                     if (Files.exists(oldPath)) {
-                         Files.move(oldPath, newPath, StandardCopyOption.REPLACE_EXISTING);
-                         ingredienteOriginale.setImageUrl("/images/ingredienti/" + newFileNameOnly);
-                     } else {
-                        ingredienteOriginale.setImageUrl(ingredienteModificato.getImageUrl());
-                     }
-                } catch (IOException e) {
-                     System.err.println("Errore durante la rinomina dell'immagine dell'ingrediente: " + e.getMessage());
-                     ingredienteOriginale.setImageUrl(ingredienteModificato.getImageUrl());
-                }
-            } else {
-                 ingredienteOriginale.setImageUrl(ingredienteModificato.getImageUrl());
             }
         }
 
@@ -613,24 +468,22 @@ public class AdminController {
     public String eliminaIngrediente(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         Ingrediente ingredienteDaEliminare = ingredienteService.findById(id);
         if (ingredienteDaEliminare != null) {
-            deleteImageFile(uploadDirectoryIngredienti, ingredienteDaEliminare.getImageUrl(), "/images/ingredienti/DefaultIngrediente.jpg");
-
-            List<ElementoCarrello> elementiDaAggiornare = elementoCarrelloRepository.findAll().stream()
+            
+            elementoCarrelloRepository.findAll().stream()
                 .filter(ec -> ec.getIngredientiExtraSelezionati().contains(ingredienteDaEliminare))
-                .collect(Collectors.toList());
-
-            for (ElementoCarrello ec : elementiDaAggiornare) {
-                ec.getIngredientiExtraSelezionati().remove(ingredienteDaEliminare);
-                ec.calcolaPrezzoUnitario();
-                elementoCarrelloRepository.save(ec);
-                Carrello carrello = ec.getCarrello();
-                if (carrello != null) {
-                    carrello.setDataUltimaModifica(java.time.LocalDateTime.now());
-                    carrelloRepository.save(carrello);
-                }
-            }
-            ingredienteService.deleteById(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Ingrediente reso inattivo e rimosso dagli extra nei carrelli.");
+                .forEach(ec -> {
+                    ec.getIngredientiExtraSelezionati().remove(ingredienteDaEliminare);
+                    ec.calcolaPrezzoUnitario(); 
+                    elementoCarrelloRepository.save(ec);
+                    Carrello carrello = ec.getCarrello();
+                    if (carrello != null) {
+                        carrello.setDataUltimaModifica(java.time.LocalDateTime.now());
+                        carrelloRepository.save(carrello);
+                    }
+                });
+            
+            ingredienteService.deleteById(id); 
+            redirectAttributes.addFlashAttribute("successMessage", "Ingrediente eliminato e riferimenti aggiornati.");
         } else {
              redirectAttributes.addFlashAttribute("errorMessage", "Ingrediente non trovato.");
         }

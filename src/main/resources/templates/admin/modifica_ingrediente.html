@@ -27,7 +27,7 @@
             <h2 class="admin-heading">Modifica Ingrediente: <span th:text="${ingrediente.nome}"></span></h2>
             <form th:action="@{/admin/salvaModificheIngrediente}" th:object="${ingrediente}" method="post" enctype="multipart/form-data">
                 <input type="hidden" th:field="*{id}" />
-                <input type="hidden" th:field="*{imageUrl}" /> 
+                <input type="hidden" name="imageUrl" th:value="*{imageUrl}" /> 
 
                 <div class="form-group mb-3">
                     <label for="nome" class="form-label">Nome Ingrediente:</label>
@@ -42,11 +42,11 @@
 
                 <div class="form-group mb-3">
                     <label class="form-label">Immagine Attuale:</label>
-                    <div th:if="${ingrediente.imageUrl != null && !#strings.equals(ingrediente.imageUrl, '/images/ingredienti/DefaultIngrediente.jpg')}">
-                        <img th:src="@{${ingrediente.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" alt="Immagine ingrediente" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd;" onerror="this.style.display='none'">
+                    <div th:if="${ingrediente.imageUrl != null && !ingrediente.imageUrl.isEmpty()}">
+                        <img th:src="${ingrediente.imageUrl}" alt="Immagine ingrediente attuale" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd;">
                     </div>
-                    <div th:if="${ingrediente.imageUrl == null || #strings.equals(ingrediente.imageUrl, '/images/ingredienti/DefaultIngrediente.jpg')}">
-                        <p class="text-muted">Nessuna immagine personalizzata caricata o immagine di default.</p>
+                     <div th:if="${ingrediente.imageUrl == null || ingrediente.imageUrl.isEmpty()}">
+                        <p class="text-muted">Nessuna immagine attualmente caricata.</p>
                     </div>
                 </div>
 
@@ -57,6 +57,9 @@
                 </div>
                 
                 <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+                <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger mt-3">
+                    <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+                </div>
             </form>
             <div th:if="${errorMessage}" class="alert alert-danger mt-3" th:text="${errorMessage}"></div>
             <div class="mt-3">

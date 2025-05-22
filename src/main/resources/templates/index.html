@@ -31,16 +31,12 @@
                 <div class="col" th:each="pizza : ${pizzeClassiche}">
                     <div class="card h-100 shadow-sm pizza-card">
                         <img th:if="${pizza.imageUrl != null && !pizza.imageUrl.isEmpty()}"
-                             th:src="@{${pizza.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" class="card-img-top"
-                             th:alt-title="${pizza.nome}"
-                             onerror="this.onerror=null; this.src='/images/pizze/Default.jpg';">
-                        <img th:unless="${pizza.imageUrl != null && !pizza.imageUrl.isEmpty()}"
-                             th:src="@{/images/pizze/Default.jpg}" class="card-img-top"
+                             th:src="${pizza.imageUrl}" class="card-img-top"
                              th:alt-title="${pizza.nome}">
                         <div class="card-body d-flex flex-column"> <h5 class="card-title text-danger" th:text="${pizza.nome}">Nome Pizza</h5>
                             <p class="fw-bold">Prezzo: €<span th:text="${#numbers.formatDecimal(pizza.prezzoBase, 1, 'COMMA', 2, 'POINT')}">0.00</span></p>
                             <p class="text-muted small">
-                                Ingredienti Base: [<span th:text="${#strings.listJoin(pizza.ingredientiBase.![nome], ', ')}"></span>]
+                                Ingredienti Base: [<span th:text="${#strings.listJoin(pizza.nomiIngredientiBase, ', ')}"></span>]
                             </p>
                             <p class="text-muted small" th:if="${pizza.ingredientiExtraDisponibili != null and not #sets.isEmpty(pizza.ingredientiExtraDisponibili)}">
                                 Potenziali Extra: [+<span th:text="${#strings.listJoin(pizza.ingredientiExtraDisponibili.![nome], ', ')}"></span>]
@@ -67,11 +63,7 @@
             <h2 class="text-center text-danger mt-5 mb-4">Le nostre bevande</h2>
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4"> <div class="col" th:each="bevanda : ${bevande}">
                     <div class="card h-100 shadow-sm bevanda-card"> <img th:if="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty()}"
-                             th:src="@{${bevanda.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" class="card-img-top bevanda-card-img" th:alt-title="${bevanda.nome}"
-                             onerror="this.onerror=null; this.src='/images/bevande/DefaultBevanda.jpg';">
-                        <img th:unless="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty()}"
-                             th:src="@{/images/bevande/DefaultBevanda.jpg}" class="card-img-top bevanda-card-img"
-                             th:alt-title="${bevanda.nome}">
+                             th:src="${bevanda.imageUrl}" class="card-img-top bevanda-card-img" th:alt-title="${bevanda.nome}">
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title text-danger" th:text="${bevanda.nome}">Nome Bevanda</h5>
                             <p class="fw-bold">Prezzo: €<span th:text="${#numbers.formatDecimal(bevanda.prezzo, 0, 'COMMA', 2, 'POINT')}">0.00</span></p>
@@ -98,11 +90,7 @@
                 <div class="col" th:each="ingredienteExtra : ${tuttiGliIngredientiExtra}">
                     <div class="card h-100 shadow-sm ingrediente-card">
                         <img th:if="${ingredienteExtra.imageUrl != null && !ingredienteExtra.imageUrl.isEmpty()}"
-                             th:src="@{${ingredienteExtra.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" class="card-img-top ingrediente-card-img" 
-                             th:alt-title="${ingredienteExtra.nome}"
-                             onerror="this.onerror=null; this.src='/images/ingredienti/DefaultIngrediente.jpg';">
-                        <img th:unless="${ingredienteExtra.imageUrl != null && !ingredienteExtra.imageUrl.isEmpty()}"
-                             th:src="@{/images/ingredienti/DefaultIngrediente.jpg}" class="card-img-top ingrediente-card-img"
+                             th:src="${ingredienteExtra.imageUrl}" class="card-img-top ingrediente-card-img" 
                              th:alt-title="${ingredienteExtra.nome}">
                         <div class="card-body">
                             <h5 class="card-title text-danger" th:text="${ingredienteExtra.nome}">Nome Ingrediente</h5>

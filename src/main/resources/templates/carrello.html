@@ -98,23 +98,13 @@
                                 <td>
                                     <div th:if="${elemento.pizza != null}">
                                         <img th:if="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
-                                             th:src="@{${elemento.pizza.imageUrl}}"
-                                             class="cart-item-img" alt="Immagine Pizza"
-                                             onerror="this.onerror=null; this.src='/images/pizze/Default.jpg';">
-                                        <img th:unless="${elemento.pizza.imageUrl != null && !elemento.pizza.imageUrl.isEmpty()}" 
-                                             th:src="@{/images/pizze/Default.jpg}"
-                                             class="cart-item-img" 
-                                             th:alt="'Immagine di ' + ${elemento.pizza.nome}">
+                                             th:src="${elemento.pizza.imageUrl}"
+                                             class="cart-item-img" alt="Immagine Pizza">
                                     </div>
                                     <div th:if="${elemento.bevanda != null}">
                                         <img th:if="${elemento.bevanda.imageUrl != null && !elemento.bevanda.imageUrl.isEmpty()}"
-                                             th:src="@{${elemento.bevanda.imageUrl}}"
-                                             class="cart-item-img" alt="Immagine Bevanda"
-                                             onerror="this.onerror=null; this.src='/images/bevande/DefaultBevanda.jpg';">
-                                        <img th:unless="${elemento.bevanda.imageUrl != null && !elemento.bevanda.imageUrl.isEmpty()}"
-                                             th:src="@{/images/bevande/DefaultBevanda.jpg}" 
-                                             class="cart-item-img" 
-                                             th:alt="'Immagine di ' + ${elemento.bevanda.nome}">
+                                             th:src="${elemento.bevanda.imageUrl}"
+                                             class="cart-item-img" alt="Immagine Bevanda">
                                         </div>
                                 </td>
                                 <td class="details-cell"> 

@@ -23,7 +23,8 @@
 
         <form th:action="@{/admin/salvaModifichePizza}" method="post" th:object="${pizza}" enctype="multipart/form-data">
             <input type="hidden" th:field="*{idPizza}" />
-            <input type="hidden" th:field="*{imageUrl}" /> 
+            <input type="hidden" name="imageUrl" th:value="*{imageUrl}" /> 
+            
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
@@ -31,8 +32,7 @@
                         <input type="text" class="form-control" id="nome" th:field="*{nome}" required>
                         <small class="text-danger" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></small>
                     </div>
-
-                    </div>
+                </div>
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label for="prezzoBase" class="form-label">Prezzo Base (€):</label>
@@ -44,16 +44,16 @@
 
             <div class="mb-3">
                 <h2>Seleziona Ingredienti Base:</h2>
-                <small class="form-text text-muted">Scegli gli ingredienti che compongono la base di questa pizza. Gli ingredienti non selezionati qui saranno considerati come possibili extra.</small>
+                <small class="form-text text-muted">Scegli gli ingredienti che compongono la base di questa pizza.</small>
                 <div class="row row-cols-2 row-cols-md-4 mt-2">
                     <div th:each="ing : ${tuttiGliIngredienti}" class="form-check col">
                         <input type="checkbox" class="form-check-input" name="ingredientiBaseIds" th:value="${ing.id}"
                                th:id="'ingBase_' + ${ing.id}"
-                               th:checked="${#sets.contains(pizza.ingredientiBase, ing)}">
+                               th:checked="${pizza.nomiIngredientiBase != null && #sets.contains(pizza.nomiIngredientiBase, ing.nome)}">
                         <label class="form-check-label" th:for="'ingBase_' + ${ing.id}" th:text="${ing.nome}"></label>
                     </div>
                 </div>
-                <small class="text-danger" th:if="${#fields.hasErrors('ingredientiBase')}" th:errors="*{ingredientiBase}"></small>
+                <small class="text-danger" th:if="${#fields.hasErrors('nomiIngredientiBase')}" th:errors="*{nomiIngredientiBase}"></small>
             </div>
             
             <div class="mb-3">
@@ -64,20 +64,27 @@
             </div>
 
             <div class="mb-3">
+                 <label class="form-label">Immagine Attuale:</label>
+                <div th:if="${pizza.imageUrl != null && !pizza.imageUrl.isEmpty()}">
+                    <img th:src="${pizza.imageUrl}" alt="Immagine pizza attuale" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd;">
+                </div>
+                <div th:if="${pizza.imageUrl == null || pizza.imageUrl.isEmpty()}">
+                    <p class="text-muted">Nessuna immagine attualmente caricata.</p>
+                </div>
+            </div>
+
+            <div class="mb-3">
                 <label for="imageFile" class="form-label">Nuova Immagine Pizza (opzionale):</label>
                 <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/jpeg, image/png">
                 <small class="form-text text-muted">Carica una nuova immagine per sostituire quella attuale. Lascia vuoto per mantenere l'immagine corrente.</small>
-                <div th:if="${pizza.imageUrl != null && !#strings.equals(pizza.imageUrl, '/images/pizze/Default.jpg')}">
-                    <p class="mt-2">Immagine attuale:</p>
-                    <img th:src="@{${pizza.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" alt="Immagine pizza" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd;" onerror="this.style.display='none'">
-                </div>
-                 <div th:if="${pizza.imageUrl == null || #strings.equals(pizza.imageUrl, '/images/pizze/Default.jpg')}">
-                    <p class="mt-2 text-muted">Nessuna immagine personalizzata caricata o immagine di default.</p>
-                </div>
             </div>
 
             <button type="submit" class="btn btn-primary">Salva Modifiche</button>
             <a th:href="@{/admin/dashboard}" class="btn btn-secondary">Annulla</a>
+            
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger mt-3">
+                <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+            </div>
         </form>
 
         <div th:if="${errorMessage}" class="alert alert-danger mt-3" role="alert" th:text="${errorMessage}"></div>

@@ -47,7 +47,6 @@ public class CarrelloService {
     @Autowired
     private IngredienteService ingredienteService;
 
-
     @Autowired
     private ClienteService clienteService;
 
@@ -91,7 +90,7 @@ public class CarrelloService {
                 Hibernate.initialize(carrelloDB.getElementi());
                 for (ElementoCarrello el : carrelloDB.getElementi()) {
                     if (el.getPizza() != null) {
-                        Hibernate.initialize(el.getPizza().getIngredientiBase());
+                        Hibernate.initialize(el.getPizza().getNomiIngredientiBase());
                         el.getPizza().setIngredientiExtraDisponibili(tuttiGliIngredienti);
                         if (el.getPizza().getScontoApplicato() != null) {
                             Hibernate.initialize(el.getPizza().getScontoApplicato());
@@ -137,7 +136,7 @@ public class CarrelloService {
                     Pizza pizzaManaged = pizzaRepository.findById(pizzaDaSessione.getIdPizza())
                             .orElseThrow(() -> new IllegalArgumentException("Pizza non trovata con ID: " + pizzaDaSessione.getIdPizza()));
 
-                    Hibernate.initialize(pizzaManaged.getIngredientiBase());
+                    Hibernate.initialize(pizzaManaged.getNomiIngredientiBase());
                     pizzaManaged.setIngredientiExtraDisponibili(tuttiGliIngredienti);
                      if (pizzaManaged.getScontoApplicato() != null) {
                         Hibernate.initialize(pizzaManaged.getScontoApplicato());
@@ -171,7 +170,6 @@ public class CarrelloService {
         final List<Ingrediente> finalExtraSelezionati = extraSelezionatiInput != null ? new ArrayList<>(extraSelezionatiInput) : Collections.emptyList();
         Set<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
         pizza.setIngredientiExtraDisponibili(tuttiGliIngredienti);
-
 
         Optional<ElementoCarrello> elementoEsistenteOpt = carrello.getElementi().stream()
                 .filter(el -> el.getPizza() != null && el.getPizza().getIdPizza().equals(pizza.getIdPizza()) &&
@@ -249,7 +247,7 @@ public class CarrelloService {
         Pizza pizza = pizzaRepository.findById(pizzaId)
                 .orElseThrow(() -> new IllegalArgumentException("Pizza non trovata con ID: " + pizzaId));
 
-        Hibernate.initialize(pizza.getIngredientiBase());
+        Hibernate.initialize(pizza.getNomiIngredientiBase());
         pizza.setIngredientiExtraDisponibili(tuttiGliIngredienti);
         if (pizza.getScontoApplicato() != null) {
             Hibernate.initialize(pizza.getScontoApplicato());
@@ -322,13 +320,11 @@ public class CarrelloService {
         }
     }
 
-
     @Transactional
     public Carrello aggiornaQuantitaElemento(Long elementoCarrelloId, int nuovaQuantita) {
         Carrello carrello = getCarrelloCorrente();
         boolean isAnonimo = (getUtenteLoggatoSePresente() == null);
         Set<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
-
 
         Optional<ElementoCarrello> elOpt = carrello.getElementi().stream()
                 .filter(e -> elementoCarrelloId.equals(e.getId())) 
@@ -455,9 +451,9 @@ public class CarrelloService {
         }
         Set<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
 
-        ElementoCarrello elementoDaAggiornare = carrello.getElementi().get(itemIndex);
+        ElementoCarrello elementoDaAggiornare = carrello.getElementi().get(itemIndex); // Modificato per usare getElementiAsList()
         if (nuovaQuantita <= 0) {
-            carrello.getElementi().remove(itemIndex);
+            carrello.getElementi().remove(elementoDaAggiornare); // Rimuovi l'oggetto, non l'indice, se la lista sottostante può cambiare
         } else {
             elementoDaAggiornare.setQuantita(nuovaQuantita);
             if (elementoDaAggiornare.getPizza() != null) {
@@ -479,7 +475,7 @@ public class CarrelloService {
             throw new IllegalArgumentException("Indice articolo non valido: " + itemIndex);
         }
 
-        carrello.getElementi().remove(itemIndex);
+        carrello.getElementi().remove(carrello.getElementi().get(itemIndex));
         httpSession.setAttribute(SESSION_CART_KEY, carrello);
         return carrello;
     }
@@ -495,7 +491,7 @@ public class CarrelloService {
         }
         Set<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
 
-        ElementoCarrello elemento = carrello.getElementi().get(itemIndex);
+        ElementoCarrello elemento = carrello.getElementi().get(itemIndex); 
         if (elemento.getPizza() == null) {
             throw new IllegalArgumentException("L'elemento non è una pizza, non può avere extra.");
         }
@@ -528,7 +524,7 @@ public class CarrelloService {
             Carrello carrello = carrelloOpt.get();
             Hibernate.initialize(carrello.getElementi()); 
             if (carrello.getElementi() != null && !carrello.getElementi().isEmpty()) {
-                for (ElementoCarrello el : new ArrayList<>(carrello.getElementi())) {
+                for (ElementoCarrello el : new ArrayList<>(carrello.getElementi())) { // Crea una copia per evitare ConcurrentModificationException
                     elementoCarrelloRepository.delete(el);
                 }
                 carrello.getElementi().clear(); 
@@ -548,7 +544,7 @@ public class CarrelloService {
             Hibernate.initialize(carrello.getElementi());
              for (ElementoCarrello el : carrello.getElementi()) {
                 if (el.getPizza() != null) {
-                    Hibernate.initialize(el.getPizza().getIngredientiBase());
+                    Hibernate.initialize(el.getPizza().getNomiIngredientiBase());
                     el.getPizza().setIngredientiExtraDisponibili(tuttiGliIngredienti);
                      if (el.getPizza().getScontoApplicato() != null) {
                         Hibernate.initialize(el.getPizza().getScontoApplicato());

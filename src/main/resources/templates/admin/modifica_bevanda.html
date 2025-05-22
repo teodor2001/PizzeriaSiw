@@ -26,7 +26,7 @@
         <h2 class="admin-heading">Modifica Bevanda: <span th:text="${bevanda.nome}"></span></h2>
         <form th:action="@{/admin/salvaModificheBevanda}" th:object="${bevanda}" method="post" enctype="multipart/form-data">
             <input type="hidden" th:field="*{id}" />
-            <input type="hidden" th:field="*{imageUrl}" /> 
+            <input type="hidden" name="imageUrl" th:value="*{imageUrl}" /> 
 
             <div class="form-group mb-3">
                 <label for="nome" class="form-label">Nome Bevanda:</label>
@@ -45,20 +45,25 @@
             </div>
 
             <div class="form-group mb-3">
+                <label class="form-label">Immagine Attuale:</label>
+                <div th:if="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty()}">
+                    <img th:src="${bevanda.imageUrl}" alt="Immagine bevanda attuale" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd;">
+                </div>
+                 <div th:if="${bevanda.imageUrl == null || bevanda.imageUrl.isEmpty()}">
+                    <p class="text-muted">Nessuna immagine attualmente caricata.</p>
+                </div>
+            </div>
+            
+            <div class="form-group mb-3">
                 <label for="imageFile" class="form-label">Nuova Immagine Bevanda (opzionale):</label>
                 <input type="file" class="form-control" id="imageFile" name="imageFile" accept="image/jpeg, image/png">
                 <small class="form-text text-muted">Carica una nuova immagine per sostituire quella attuale. Lascia vuoto per mantenere l'immagine corrente.</small>
-                
-                <div th:if="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty() && bevanda.imageUrl != '/images/bevande/DefaultBevanda.jpg'}" class="mt-2">
-                    <p>Immagine attuale:</p>
-                    <img th:src="@{${bevanda.imageUrl}}" alt="Immagine bevanda" style="max-width: 150px; max-height: 150px; border: 1px solid #ddd;">
-                </div>
-                <div th:if="${bevanda.imageUrl == null || bevanda.imageUrl.isEmpty() || bevanda.imageUrl == '/images/bevande/DefaultBevanda.jpg'}" class="mt-2">
-                    <p class="text-muted">Nessuna immagine personalizzata caricata o immagine di default.</p>
-                </div>
             </div>
 
             <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+            <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger mt-3">
+                <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+            </div>
         </form>
         <div th:if="${errorMessage}" class="alert alert-danger mt-3" th:text="${errorMessage}"></div>
         <div class="mt-3">

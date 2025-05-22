@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Entity
 public class Pizza {
@@ -23,13 +22,10 @@ public class Pizza {
     @DecimalMin(value = "0.01", message = "Il prezzo base deve essere maggiore di 0")
     private double prezzoBase;
 
-    @ManyToMany
-    @JoinTable(
-        name = "pizza_ingrediente_base",
-        joinColumns = @JoinColumn(name = "pizza_id"),
-        inverseJoinColumns = @JoinColumn(name = "ingrediente_id")
-    )
-    private Set<Ingrediente> ingredientiBase = new HashSet<>();
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "pizza_nomi_ingredienti_base", joinColumns = @JoinColumn(name = "pizza_id"))
+    @Column(name = "nome_ingrediente")
+    private Set<String> nomiIngredientiBase = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "sconto_id")
@@ -48,12 +44,13 @@ public class Pizza {
     private double prezzoScontato;
 
     public Pizza() {
+        this.nomiIngredientiBase = new HashSet<>();
     }
 
-    public Pizza(String nome, double prezzoBase, Set<Ingrediente> ingredientiBase) {
+    public Pizza(String nome, double prezzoBase) {
+        this();
         this.nome = nome;
         this.prezzoBase = prezzoBase;
-        this.ingredientiBase = ingredientiBase != null ? ingredientiBase : new HashSet<>();
     }
 
     public String getImageUrl() {
@@ -88,12 +85,12 @@ public class Pizza {
         this.prezzoBase = prezzoBase;
     }
 
-    public Set<Ingrediente> getIngredientiBase() {
-        return ingredientiBase;
+    public Set<String> getNomiIngredientiBase() {
+        return nomiIngredientiBase;
     }
 
-    public void setIngredientiBase(Set<Ingrediente> ingredientiBase) {
-        this.ingredientiBase = ingredientiBase;
+    public void setNomiIngredientiBase(Set<String> nomiIngredientiBase) {
+        this.nomiIngredientiBase = nomiIngredientiBase;
     }
 
     public Sconto getScontoApplicato() {

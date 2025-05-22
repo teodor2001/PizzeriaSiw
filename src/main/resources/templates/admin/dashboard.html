@@ -41,15 +41,15 @@
                         <tr th:each="pizza : ${pizze}">
                             <td>
                                 <img th:if="${pizza.imageUrl != null && !pizza.imageUrl.isEmpty()}" 
-                                     th:src="@{${pizza.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" 
+                                     th:src="${pizza.imageUrl}" 
                                      alt="Pizza Image" style="width: 50px; height: 50px; object-fit: cover;">
-                                <span th:unless="${pizza.imageUrl != null && !pizza.imageUrl.isEmpty()}">N/A</span>
                             </td>
                             <td><span th:text="${pizza.nome}"></span></td>
                             <td><span th:text="${#numbers.formatDecimal(pizza.prezzoBase, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
                             <td>
-                                <span th:each="ingredienteBase, ingredienteBaseStat : ${pizza.ingredientiBase}"
-                                      th:text="${ingredienteBase.nome} + (${!ingredienteBaseStat.last} ? ', ' : '')"></span>
+                                <span th:each="nomeIngrediente, iterStat : ${pizza.nomiIngredientiBase}"
+                                      th:text="${nomeIngrediente} + (${!iterStat.last} ? ', ' : '')"></span>
+                                <span th:if="${#lists.isEmpty(pizza.nomiIngredientiBase)}">Nessuno</span>
                             </td>
                             <td>
                                 <span th:if="${pizza.ingredientiExtraDisponibili != null and not #sets.isEmpty(pizza.ingredientiExtraDisponibili)}">
@@ -91,9 +91,8 @@
                         <tr th:each="ingrediente : ${ingredienti}">
                             <td>
                                 <img th:if="${ingrediente.imageUrl != null && !ingrediente.imageUrl.isEmpty()}" 
-                                     th:src="@{${ingrediente.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" 
+                                     th:src="${ingrediente.imageUrl}" 
                                      alt="Ingrediente Image" style="width: 50px; height: 50px; object-fit: cover;">
-                                <span th:unless="${ingrediente.imageUrl != null && !ingrediente.imageUrl.isEmpty()}">N/A</span>
                             </td>
                             <td><span th:text="${ingrediente.nome}"></span></td>
                             <td><span th:text="${#numbers.formatDecimal(ingrediente.prezzo, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
@@ -124,9 +123,8 @@
                         <tr th:each="bevanda : ${bevande}">
                             <td>
                                 <img th:if="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty()}" 
-                                     th:src="@{${bevanda.imageUrl} + '?v=' + ${#dates.createNow().getTime()}}" 
+                                     th:src="${bevanda.imageUrl}" 
                                      alt="Bevanda Image" style="width: 50px; height: 50px; object-fit: cover;">
-                                <span th:unless="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty()}">N/A</span>
                             </td>
                             <td><span th:text="${bevanda.nome}"></span></td>
                             <td><span th:text="${#numbers.formatDecimal(bevanda.prezzo, 0, 'COMMA', 2, 'POINT')}"></span> €</td>
