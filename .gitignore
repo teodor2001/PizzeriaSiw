@@ -35,3 +35,4 @@ build/
 ### File di Configurazione Sensibili ###
 secrets.xml
 .env
+CaricaVariabiliAmbiente.ps1
