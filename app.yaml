@@ -1,0 +1,13 @@
+runtime: java
+env: flex
+
+runtime_config:
+  operating_system: "ubuntu22"
+  runtime_version: "17"
+env_variables:
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://pizzeria.chcwqq4420q6.eu-west-2.rds.amazonaws.com:5432/pizzeria"
+  SPRING_DATASOURCE_USERNAME: "postgres_admin"
+  AWS_S3_BUCKET_NAME: "pizzeriasiw-images"
+  AWS_S3_REGION: "eu-west-2"
+  AWS_DEFAULT_REGION: "eu-west-2"
+  id_google: "890604978394-085lurq6sjbumgsdel804mf15ed05tjk.apps.googleusercontent.com"
