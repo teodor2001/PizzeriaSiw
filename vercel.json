@@ -2,12 +2,11 @@
   "version": 2,
   "builds": [
     {
-      "src": "pom.xml", // Indica a Vercel di usare questo file per il build
-      "use": "@vercel-community/java" // Sostituisci con il builder Java/Maven più attuale e affidabile che trovi
+      "src": "pom.xml",
+      "use": "@vercel-community/java"
     }
   ],
   "routes": [
-    // Questa rotta inoltra tutto alla tua applicazione Spring Boot
     { "src": "/(.*)", "dest": "/" } 
   ]
 }
