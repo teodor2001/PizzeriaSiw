@@ -74,10 +74,13 @@ public class Carrello {
     }
 
     public double getTotaleComplessivo() {
-        this.totaleComplessivo = 0;
+        this.totaleComplessivo = 0.0;
         if (this.elementi != null) {
             for (ElementoCarrello elemento : this.elementi) {
-                this.totaleComplessivo += elemento.getPrezzoTotaleElemento();
+                if (elemento != null) {
+                    elemento.calcolaPrezzoUnitario(); // Ricalcola il prezzo unitario per ogni elemento
+                    this.totaleComplessivo += elemento.getPrezzoTotaleElemento();
+                }
             }
         }
         return this.totaleComplessivo;

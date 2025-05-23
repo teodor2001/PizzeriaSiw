@@ -57,4 +57,24 @@ public class ClienteService {
     public void deleteById(Long id) {
 		clienteRepository.deleteById(id);
 	}
+
+    @Transactional
+    public Cliente getClienteByEmail(String email) {
+        return clienteRepository.findByEmail(email);
+    }
+
+    @Transactional
+    public Cliente saveCliente(Cliente cliente) {
+        return clienteRepository.save(cliente);
+    }
+
+    @Transactional
+    public Iterable<Cliente> getAllClienti() {
+        return clienteRepository.findAll();
+    }
+
+    @Transactional
+    public Cliente getCliente(Long id) {
+        return clienteRepository.findById(id).orElse(null);
+    }
 }

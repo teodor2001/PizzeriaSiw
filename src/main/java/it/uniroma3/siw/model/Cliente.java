@@ -32,6 +32,10 @@ public class Cliente {
     @Size(min = 8, message = "La password deve contenere almeno 8 caratteri.")
     private String password;
 
+    private String indirizzo;
+    
+    private String telefono;
+
 	@ManyToMany
 	@JoinTable(name = "cliente_pizzeria", joinColumns = @JoinColumn(name = "cliente_id"), inverseJoinColumns = @JoinColumn(name = "pizzeria_id"))
 	private List<Pizzeria> pizzerie = new ArrayList<>();
@@ -142,9 +146,25 @@ public class Cliente {
         }
     }
 
+    public String getIndirizzo() {
+        return indirizzo;
+    }
+
+    public void setIndirizzo(String indirizzo) {
+        this.indirizzo = indirizzo;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
 	@Override
 	public int hashCode() {
-		return Objects.hash(carrello, cognome, email, idCliente, nome, password, pizzerie, sconti);
+		return Objects.hash(carrello, cognome, email, idCliente, indirizzo, nome, password, pizzerie, sconti, telefono);
 	}
 
 	@Override
@@ -158,8 +178,9 @@ public class Cliente {
 		Cliente other = (Cliente) obj;
 		return Objects.equals(carrello, other.carrello) && Objects.equals(cognome, other.cognome)
 				&& Objects.equals(email, other.email) && Objects.equals(idCliente, other.idCliente)
-				&& Objects.equals(nome, other.nome) && Objects.equals(password, other.password)
-				&& Objects.equals(pizzerie, other.pizzerie) && Objects.equals(sconti, other.sconti);
+				&& Objects.equals(indirizzo, other.indirizzo) && Objects.equals(nome, other.nome)
+				&& Objects.equals(password, other.password) && Objects.equals(pizzerie, other.pizzerie)
+				&& Objects.equals(sconti, other.sconti) && Objects.equals(telefono, other.telefono);
 	}
 
 }

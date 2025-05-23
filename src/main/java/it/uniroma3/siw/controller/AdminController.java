@@ -394,15 +394,23 @@ public class AdminController {
                                    @RequestParam("imageFile") MultipartFile imageFile,
                                    Model model) {
         if (bindingResult.hasErrors()) {
+            model.addAttribute("errorMessage", "Si sono verificati errori nella compilazione del form.");
             return "admin/aggiungi_ingrediente";
         }
 
         if (imageFile != null && !imageFile.isEmpty()) {
             try {
+                if (imageFile.getSize() > 5 * 1024 * 1024) { // 5MB in bytes
+                    String errorMsg = "L'immagine è troppo grande. Dimensione massima consentita: 5MB. Dimensione attuale: " + 
+                        String.format("%.2f", imageFile.getSize() / (1024.0 * 1024.0)) + "MB";
+                    model.addAttribute("errorMessage", errorMsg);
+                    return "admin/aggiungi_ingrediente";
+                }
                 String s3FileUrl = s3Service.uploadFile("ingredienti", imageFile.getOriginalFilename(), imageFile);
                 ingrediente.setImageUrl(s3FileUrl);
             } catch (IOException e) {
-                bindingResult.rejectValue("imageUrl", "uploadError", "Errore upload immagine: " + e.getMessage());
+                String errorMsg = "Errore durante l'upload dell'immagine: " + e.getMessage();
+                model.addAttribute("errorMessage", errorMsg);
                 return "admin/aggiungi_ingrediente";
             }
         } else {

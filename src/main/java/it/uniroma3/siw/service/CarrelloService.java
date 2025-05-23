@@ -79,48 +79,37 @@ public class CarrelloService {
 
     @Transactional
     public Carrello getCarrelloCorrente() {
-        Cliente clienteLoggato = getUtenteLoggatoSePresente();
+        Cliente cliente = getUtenteLoggatoSePresente();
+        Carrello carrello;
         Set<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
 
-        if (clienteLoggato != null) {
-            Optional<Carrello> carrelloOpt = carrelloRepository.findByCliente(clienteLoggato);
-            Carrello carrelloDB;
-            if (carrelloOpt.isPresent()) {
-                carrelloDB = carrelloOpt.get();
-                Hibernate.initialize(carrelloDB.getElementi());
-                for (ElementoCarrello el : carrelloDB.getElementi()) {
-                    if (el.getPizza() != null) {
-                        Hibernate.initialize(el.getPizza().getNomiIngredientiBase());
-                        el.getPizza().setIngredientiExtraDisponibili(tuttiGliIngredienti);
-                        if (el.getPizza().getScontoApplicato() != null) {
-                            Hibernate.initialize(el.getPizza().getScontoApplicato());
-                        }
-                    }
-                    Hibernate.initialize(el.getIngredientiExtraSelezionati()); 
-                }
-            } else {
-                carrelloDB = new Carrello();
-                carrelloDB.setCliente(clienteLoggato);
-                carrelloDB = carrelloRepository.save(carrelloDB);
-            }
-            Carrello carrelloSessione = (Carrello) httpSession.getAttribute(SESSION_CART_KEY);
-            if (carrelloSessione != null && !carrelloSessione.getElementi().isEmpty()) {
-                 unisciCarrelloSessioneConCarrelloDB(clienteLoggato, carrelloDB);
-            }
-            return carrelloDB;
+        if (cliente != null) {
+            carrello = carrelloRepository.findByCliente(cliente)
+                    .orElseGet(() -> {
+                        Carrello nuovoCarrello = new Carrello();
+                        nuovoCarrello.setCliente(cliente);
+                        return carrelloRepository.save(nuovoCarrello);
+                    });
         } else {
-            Carrello carrelloSessione = (Carrello) httpSession.getAttribute(SESSION_CART_KEY);
-            if (carrelloSessione == null) {
-                carrelloSessione = new Carrello();
-                httpSession.setAttribute(SESSION_CART_KEY, carrelloSessione);
+            carrello = (Carrello) httpSession.getAttribute(SESSION_CART_KEY);
+            if (carrello == null) {
+                carrello = new Carrello();
+                httpSession.setAttribute(SESSION_CART_KEY, carrello);
             }
-            for (ElementoCarrello el : carrelloSessione.getElementi()) {
-                 if (el.getPizza() != null) {
-                    el.getPizza().setIngredientiExtraDisponibili(tuttiGliIngredienti);
-                 }
-            }
-            return carrelloSessione;
         }
+
+        // Initialize pizza's extra ingredients and recalculate prices
+        for (ElementoCarrello elemento : carrello.getElementi()) {
+            if (elemento.getPizza() != null) {
+                elemento.getPizza().setIngredientiExtraDisponibili(tuttiGliIngredienti);
+                if (elemento.getPizza().getScontoApplicato() != null) {
+                    Hibernate.initialize(elemento.getPizza().getScontoApplicato());
+                }
+            }
+            elemento.calcolaPrezzoUnitario();
+        }
+
+        return carrello;
     }
 
     @Transactional
@@ -197,7 +186,7 @@ public class CarrelloService {
             nuovoElemento.calcolaPrezzoUnitario(); 
             carrello.aggiungiElemento(nuovoElemento); 
             if (!isAnonimo) {
-                 elementoCarrelloRepository.save(nuovoElemento); 
+                elementoCarrelloRepository.save(nuovoElemento); 
             }
         }
     }
@@ -385,7 +374,10 @@ public class CarrelloService {
             
             List<Ingrediente> nuoviExtraSelezionati = new ArrayList<>();
             if (selectedExtraIds != null && !selectedExtraIds.isEmpty()) {
-                List<Long> idsPotenzialiExtra = pizzaDellElemento.getIngredientiExtraDisponibili().stream().map(Ingrediente::getId).collect(Collectors.toList());
+                List<Long> idsPotenzialiExtra = pizzaDellElemento.getIngredientiExtraDisponibili().stream()
+                    .map(Ingrediente::getId)
+                    .collect(Collectors.toList());
+                
                 for(Long selectedId : selectedExtraIds) {
                     if(!idsPotenzialiExtra.contains(selectedId)) {
                         throw new IllegalArgumentException("Ingrediente extra con ID " + selectedId + " non valido per questa pizza.");

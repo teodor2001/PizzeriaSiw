@@ -6,11 +6,13 @@ import it.uniroma3.siw.model.ElementoCarrello;
 import it.uniroma3.siw.model.Pizza;
 import it.uniroma3.siw.model.Pizzeria;
 import it.uniroma3.siw.model.Ingrediente;
+import it.uniroma3.siw.model.Bevanda;
 import it.uniroma3.siw.service.CarrelloService;
 import it.uniroma3.siw.service.ClienteService;
 import it.uniroma3.siw.service.PizzaService;
 import it.uniroma3.siw.service.PizzeriaService;
 import it.uniroma3.siw.service.IngredienteService;
+import it.uniroma3.siw.service.BevandaService;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.hibernate.Hibernate;
@@ -50,6 +52,8 @@ public class CarrelloController {
     @Autowired 
     private IngredienteService ingredienteService;
 
+    @Autowired
+    private BevandaService bevandaService;
 
     @ModelAttribute("pizzeria")
     public Pizzeria getPizzeria() {
@@ -57,22 +61,11 @@ public class CarrelloController {
     }
 
     @GetMapping
-    public String visualizzaCarrello(Model model) {
+    public String mostraCarrello(Model model) {
         Carrello carrello = carrelloService.getCarrelloCorrente();
-        Set<Ingrediente> tuttiGliIngredienti = ingredienteService.findAll();
-
         model.addAttribute("carrello", carrello);
-        if (carrello != null) {
-            for (ElementoCarrello el : carrello.getElementi()) {
-                if (el.getPizza() != null) {
-                    el.getPizza().setIngredientiExtraDisponibili(tuttiGliIngredienti);
-                }
-            }
-            model.addAttribute("totaleCarrello", carrello.getTotaleComplessivo());
-        } else {
-            model.addAttribute("totaleCarrello", 0.0);
-        }
-        return "carrello"; 
+        model.addAttribute("totaleCarrello", carrello.getTotaleComplessivo());
+        return "carrello";
     }
 
     @PostMapping("/aggiungiPizza")
@@ -83,7 +76,12 @@ public class CarrelloController {
                                      HttpServletRequest request) {
         try {
             carrelloService.aggiungiPizzaAlCarrello(pizzaId, ingredientiExtraIds, quantita);
-            redirectAttributes.addFlashAttribute("successoCarrello", "Pizza aggiunta al carrello!");
+            Pizza pizzaAggiunta = pizzaService.findById(pizzaId);
+            String message = "Pizza " + pizzaAggiunta.getNome() + " aggiunta al carrello!";
+            if (ingredientiExtraIds != null && !ingredientiExtraIds.isEmpty()) {
+                message += " Con ingredienti extra.";
+            }
+            redirectAttributes.addFlashAttribute("successoCarrello", message);
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("erroreCarrello", e.getMessage());
             Pizza pizza = pizzaService.findById(pizzaId); 
@@ -110,7 +108,9 @@ public class CarrelloController {
                                            HttpServletRequest request) {
         try {
             carrelloService.aggiungiBevandaAlCarrello(bevandaId, quantita);
-            redirectAttributes.addFlashAttribute("successoCarrello", "Bevanda aggiunta al carrello!");
+            Bevanda bevandaAggiunta = bevandaService.findById(bevandaId).orElse(null);
+            String message = "Bevanda " + (bevandaAggiunta != null ? bevandaAggiunta.getNome() : "") + " aggiunta al carrello!";
+            redirectAttributes.addFlashAttribute("successoCarrello", message);
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute("erroreCarrello", e.getMessage());
         }

@@ -102,12 +102,15 @@ public class ElementoCarrello {
     public void calcolaPrezzoUnitario() {
         if (this.pizza != null) {
             // Usa pizza.getPrezzoScontato() che già gestisce se c'è uno sconto o meno
-            double prezzoPizzaEffettivo = this.pizza.getPrezzoScontato(); // Correctly uses discounted price
+            double prezzoPizzaEffettivo = this.pizza.getPrezzoScontato();
+            if (prezzoPizzaEffettivo < 0) {
+                prezzoPizzaEffettivo = this.pizza.getPrezzoBase();
+            }
 
-            double prezzoExtraAggiuntivi = 0;
-            if (this.ingredientiExtraSelezionati != null) {
+            double prezzoExtraAggiuntivi = 0.0;
+            if (this.ingredientiExtraSelezionati != null && !this.ingredientiExtraSelezionati.isEmpty()) {
                 for (Ingrediente extra : this.ingredientiExtraSelezionati) {
-                    if (extra.getPrezzo() != null) {
+                    if (extra != null && extra.getPrezzo() != null) {
                         prezzoExtraAggiuntivi += extra.getPrezzo();
                     }
                 }
@@ -116,7 +119,7 @@ public class ElementoCarrello {
 
         } else if (this.bevanda != null) {
             this.prezzoUnitarioCalcolato = this.bevanda.getPrezzo();
-            if (this.ingredientiExtraSelezionati != null) { // Bevande non hanno extra
+            if (this.ingredientiExtraSelezionati != null) {
                 this.ingredientiExtraSelezionati.clear();
             }
         } else {

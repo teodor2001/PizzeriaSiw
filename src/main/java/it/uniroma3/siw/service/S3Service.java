@@ -51,6 +51,14 @@ public class S3Service {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Il file da caricare non può essere nullo o vuoto.");
         }
+
+        // Controllo dimensione file (5MB)
+        long maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (file.getSize() > maxSize) {
+            String sizeInMB = String.format("%.2f", file.getSize() / (1024.0 * 1024.0));
+            throw new IllegalArgumentException("L'immagine è troppo grande. Dimensione attuale: " + sizeInMB + "MB. Dimensione massima consentita: 5MB.");
+        }
+
         if (s3Client == null) {
             throw new IllegalStateException("S3Client non è stato inizializzato correttamente. Controllare la configurazione AWS.");
         }
