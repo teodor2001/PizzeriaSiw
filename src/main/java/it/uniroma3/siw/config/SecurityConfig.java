@@ -39,31 +39,42 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/register")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/login")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/login**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/css/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/pizze_scontate")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasRole("ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/carrello/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/ordine/conferma")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/error")).permitAll() 
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .successHandler((request, response, authentication) -> {
+                            String targetUrlFromParam = request.getParameter("redirect_url");
+
+                            if (targetUrlFromParam != null && !targetUrlFromParam.isEmpty() &&
+                                targetUrlFromParam.startsWith("/") && !targetUrlFromParam.equals("/login") && 
+                                !targetUrlFromParam.startsWith("/login?")) {
+                                
+                                response.sendRedirect(request.getContextPath() + targetUrlFromParam);
+                                return;
+                            }
+                            
                             if (authentication.getAuthorities().stream()
                                     .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-                                response.sendRedirect("/admin/dashboard");
+                                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
                             } else {
-                                response.sendRedirect("/pizze_scontate");
+                                response.sendRedirect(request.getContextPath() + "/pizze_scontate");
                             }
                         })
+                        .failureUrl("/login?error=true")
                         .permitAll()
                 )
-                
-                
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login")
-                        .defaultSuccessUrl("/pizze_scontate", true)
+                        .defaultSuccessUrl("/pizze_scontate", false)
                         .failureUrl("/login?error=true")
                 )
                 .logout(logout -> logout

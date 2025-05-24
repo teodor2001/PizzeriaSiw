@@ -22,15 +22,30 @@ public class LoginController {
     private ClienteService clienteService;
 
     @GetMapping("/login")
-    public String login(Model model, @RequestParam(value = "redirect", required = false) String redirectUrl) {
+    public String login(Model model,
+                        @RequestParam(value = "redirect_url", required = false) String redirectUrl,
+                        @RequestParam(value = "login_required", required = false) Boolean loginRequiredFlag,
+                        @RequestParam(value = "registrationSuccess", required = false) String registrationSuccess) {
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.isAuthenticated() && !authentication.getPrincipal().equals("anonymousUser")) {
-            if (redirectUrl != null && !redirectUrl.isEmpty()) {
-                return "redirect:" + redirectUrl;
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal().toString())) {
+            String targetU = redirectUrl;
+            if (targetU == null || targetU.isEmpty()) {
+                targetU = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")) ? "/admin/dashboard" : "/pizze_scontate";
             }
-            return "redirect:/";
+            return "redirect:" + targetU;
         }
-        model.addAttribute("redirectUrl", redirectUrl); 	
+
+        if (Boolean.TRUE.equals(loginRequiredFlag)) {
+            model.addAttribute("customLoginMessage", "Devi effettuare il login per procedere con l'ordine.");
+        }
+
+        if (registrationSuccess != null) {
+            model.addAttribute("registrationSuccessMessage", "Registrazione avvenuta con successo! Effettua il login.");
+        }
+        
+        model.addAttribute("redirectUrl", redirectUrl); // Pass to the view for the form
         return "login";
     }
 
@@ -51,6 +66,6 @@ public class LoginController {
             return "register";
         }
         clienteService.create(cliente);
-        return "redirect:/login?registrationSuccess";
+        return "redirect:/login?registrationSuccess=true"; // Added parameter for success message
     }
 }
