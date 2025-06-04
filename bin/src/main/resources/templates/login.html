@@ -2,96 +2,48 @@
 <html xmlns:th="http://www.thymeleaf.org">
 
 <head>
-	<title>Accedi</title>
-	<link rel="icon" href="/images/LogoPizzeria.jpg" type="image/jpeg">
-	<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}">
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-	<style>
-		.container {
-			background-color: #fff0e1;
-			padding: 30px;
-			border-radius: 8px;
-			box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-			width: 400px;
-			text-align: center;
-			margin: 50px auto;
-			/* Centra la card nella pagina */
-		}
-
-		h1 {
-			color: #b71c1c;
-			margin-bottom: 20px;
-		}
-
-		label {
-			display: block;
-			margin-bottom: 5px;
-			color: #555;
-			text-align: left;
-		}
-
-		input[type="text"],
-		input[type="password"] {
-			width: 100%;
-			padding: 10px;
-			margin-bottom: 15px;
-			border: 1px solid #f8c291;
-			border-radius: 4px;
-			box-sizing: border-box;
-		}
-
-		button[type="submit"] {
-			background-color: #b71c1c;
-			color: #fff;
-			padding: 10px 15px;
-			border: none;
-			border-radius: 4px;
-			cursor: pointer;
-			font-size: 16px;
-		}
-
-		button[type="submit"]:hover {
-			background-color: #8e1717;
-		}
-
-		p {
-			margin-top: 15px;
-			color: #777;
-		}
-
-		a {
-			color: #b71c1c;
-			text-decoration: none;
-		}
-
-		a:hover {
-			text-decoration: underline;
-		}
-	</style>
-</head>
+    <title>Accedi</title>
+    <link rel="icon" href="/images/LogoPizzeria.jpg" type="image/jpeg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="/css/login_css.css" rel="stylesheet"> </head>
 
 <body>
-	<div class="container">
-		<h1>Accedi</h1>
-		<div th:if="${param.error}">
-			<p style="color: red;">Nome utente o password non validi.</p>
-		</div>
-		<div th:if="${param.logout}">
-			<p style="color: green;">Sei stato disconnesso con successo.</p>
-		</div>
-		<form th:action="@{/login}" method="post">
-			<div>
-				<label for="username">Email:</label>
-				<input type="text" id="username" name="username" class="form-control" required="required">
-			</div>
-			<div>
-				<label for="password">Password:</label>
-				<input type="password" id="password" name="password" class="form-control" required="required">
-			</div>
-			<button type="submit" class="btn btn-danger">Accedi</button>
-		</form>
-		<p>Non hai un account? <a th:href="@{/register}">Registrati qui</a>.</p>
-	</div>
+    <div class="container">
+        <h1>Accedi</h1>
+
+        <div th:if="${customLoginMessage}" class="alert alert-info" role="alert" th:text="${customLoginMessage}">
+        </div>
+        
+        <div th:if="${registrationSuccessMessage}" class="alert alert-success" role="alert" th:text="${registrationSuccessMessage}">
+        </div>
+
+        <div th:if="${param.error}" class="error-message"> <p>Nome utente o password non validi.</p>
+        </div>
+        <div th:if="${param.logout}" class="logout-message"> <p>Sei stato disconnesso con successo.</p>
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <input th:if="${redirectUrl != null && !redirectUrl.isEmpty()}" type="hidden" name="redirect_url" th:value="${redirectUrl}" />
+            
+            <div>
+                <label for="username">Email:</label>
+                <input type="text" id="username" name="username" class="form-control" required="required">
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" class="form-control" required="required">
+            </div>
+            <button type="submit" class="btn btn-danger">Accedi</button>
+        </form>
+
+        <div class="oauth-separator">
+            <span>oppure</span>
+        </div>
+        <a th:href="@{/oauth2/authorization/google}" class="btn btn-google">
+            Accedi con Google
+        </a>
+        <p>Non hai un account? <a th:href="@{/register}">Registrati qui</a>.</p>
+    </div>
 </body>
 
 </html>

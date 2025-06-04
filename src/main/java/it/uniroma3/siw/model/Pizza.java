@@ -22,10 +22,20 @@ public class Pizza {
     @DecimalMin(value = "0.01", message = "Il prezzo base deve essere maggiore di 0")
     private double prezzoBase;
 
+    // Existing field for names of base ingredients
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "pizza_nomi_ingredienti_base", joinColumns = @JoinColumn(name = "pizza_id"))
     @Column(name = "nome_ingrediente")
     private Set<String> nomiIngredientiBase = new HashSet<>();
+
+    // NEW FIELD: Set of Ingrediente objects for base ingredients
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "pizza_ingredienti_base",
+        joinColumns = @JoinColumn(name = "pizza_id"),
+        inverseJoinColumns = @JoinColumn(name = "ingrediente_id")
+    )
+    private Set<Ingrediente> ingredientiBase = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "sconto_id")
@@ -45,6 +55,7 @@ public class Pizza {
 
     public Pizza() {
         this.nomiIngredientiBase = new HashSet<>();
+        this.ingredientiBase = new HashSet<>(); // Initialize the new set
     }
 
     public Pizza(String nome, double prezzoBase) {
@@ -91,6 +102,24 @@ public class Pizza {
 
     public void setNomiIngredientiBase(Set<String> nomiIngredientiBase) {
         this.nomiIngredientiBase = nomiIngredientiBase;
+    }
+
+    // NEW GETTER AND SETTER for ingredientiBase
+    public Set<Ingrediente> getIngredientiBase() {
+        return ingredientiBase;
+    }
+
+    public void setIngredientiBase(Set<Ingrediente> ingredientiBase) {
+        this.ingredientiBase = ingredientiBase;
+        // Optionally, update nomiIngredientiBase based on the new ingredientiBase
+        if (ingredientiBase != null) {
+            this.nomiIngredientiBase = new HashSet<>();
+            for (Ingrediente ing : ingredientiBase) {
+                this.nomiIngredientiBase.add(ing.getNome());
+            }
+        } else {
+            this.nomiIngredientiBase = new HashSet<>();
+        }
     }
 
     public Sconto getScontoApplicato() {
