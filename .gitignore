@@ -31,8 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
-
-### File di Configurazione Sensibili ###
-secrets.xml
-.env
 CaricaVariabiliAmbiente.ps1
+# Ignora il file dei segreti
+config/secrets.properties
