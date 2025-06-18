@@ -48,7 +48,20 @@
 
     <div class="flex-grow-1">
         <div class="container mt-4">
-            <h2 class="text-center text-danger mb-4">Le Nostre Pizze</h2> 
+            <div class="row mb-4">
+                <div class="col-12 d-flex justify-content-center">
+                    <div class="input-group w-50 shadow">
+                        <input id="searchInput" type="text" class="form-control" placeholder="Cerca per nome..." aria-label="Cerca">
+                        <select id="searchCategory" class="form-select" style="max-width: 180px;">
+                            <option value="pizza">Pizze</option>
+                            <option value="bevanda">Bevande</option>
+                            <option value="ingrediente">Ingredienti</option>
+                        </select>
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    </div>
+                </div>
+            </div>
+            <h2 class="text-center text-danger mb-4" id="titoloPizze">Le Nostre Pizze</h2>
 
             <div th:if="${#lists.isEmpty(elencoPizze)}" class="alert alert-info shadow-sm" role="alert">
                 <h4 class="alert-heading">Nessuna pizza disponibile al momento!</h4>
@@ -149,8 +162,8 @@
                 </div>
             </div>
             
-            <h2 class="text-center text-danger mt-5 mb-4">Le nostre bevande</h2>
-             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <h2 class="text-center text-danger mt-5 mb-4" id="titoloBevande">Le nostre bevande</h2>
+             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="bevandeSection">
                 <div class="col" th:each="bevanda : ${bevande}">
                     <div class="card h-100 shadow-sm bevanda-card">
                         <img th:if="${bevanda.imageUrl != null && !bevanda.imageUrl.isEmpty()}"
@@ -175,8 +188,8 @@
                 </div>
             </div>
 
-            <h2 class="text-center text-danger mt-5 mb-4">I nostri ingredienti extra</h2>
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <h2 class="text-center text-danger mt-5 mb-4" id="titoloIngredienti">I nostri ingredienti extra</h2>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4 mb-5" id="ingredientiSection">
                 <div class="col" th:each="ingredienteExtra : ${tuttiGliIngredientiExtra}">
                     <div class="card h-100 shadow-sm ingrediente-card">
                          <img th:if="${ingredienteExtra.imageUrl != null && !ingredienteExtra.imageUrl.isEmpty()}"
@@ -187,6 +200,9 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="col-12 text-center mt-4" id="noResultsMsg" style="display:none;">
+                <div class="alert alert-warning">Non è presente nessuna pizza, bevanda o ingrediente con questo nome sul nostro menu</div>
             </div>
         </div>
     </div>
@@ -217,5 +233,40 @@
 	</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function filterCards() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('searchCategory').value;
+            let found = false;
+            // Mostra/nascondi titoli e sezioni
+            document.getElementById('titoloPizze').style.display = (category === 'pizza' || search === '') ? '' : 'none';
+            document.getElementById('titoloBevande').style.display = (category === 'bevanda' || search === '') ? '' : 'none';
+            document.getElementById('titoloIngredienti').style.display = (category === 'ingrediente' || search === '') ? '' : 'none';
+            document.querySelectorAll('.row.row-cols-1.row-cols-lg-2.g-4').forEach(el => el.parentElement.parentElement.style.display = (category === 'pizza' || search === '') ? '' : 'none');
+            document.getElementById('bevandeSection').style.display = (category === 'bevanda' || search === '') ? '' : 'none';
+            document.getElementById('ingredientiSection').style.display = (category === 'ingrediente' || search === '') ? '' : 'none';
+            // Pizze
+            document.querySelectorAll('.pizza-card').forEach(card => {
+                const match = (category === 'pizza' && card.querySelector('.card-title').textContent.toLowerCase().includes(search)) || search === '';
+                card.parentElement.style.display = match ? '' : 'none';
+                if(match && category === 'pizza') found = true;
+            });
+            // Bevande
+            document.querySelectorAll('.bevanda-card').forEach(card => {
+                const match = (category === 'bevanda' && card.querySelector('.card-title').textContent.toLowerCase().includes(search)) || search === '';
+                card.parentElement.style.display = match ? '' : 'none';
+                if(match && category === 'bevanda') found = true;
+            });
+            // Ingredienti
+            document.querySelectorAll('.ingrediente-card').forEach(card => {
+                const match = (category === 'ingrediente' && card.querySelector('.card-title').textContent.toLowerCase().includes(search)) || search === '';
+                card.parentElement.style.display = match ? '' : 'none';
+                if(match && category === 'ingrediente') found = true;
+            });
+            document.getElementById('noResultsMsg').style.display = found ? 'none' : '';
+        }
+        document.getElementById('searchInput').addEventListener('input', filterCards);
+        document.getElementById('searchCategory').addEventListener('change', filterCards);
+    </script>
 </body>
 </html>

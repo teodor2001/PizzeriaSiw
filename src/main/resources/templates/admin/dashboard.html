@@ -24,9 +24,22 @@
 
     <div class="flex-grow-1">
         <div class="container mt-4 admin-container">
-            <h2 class="admin-heading">Gestione Pizze</h2>
-            <a th:href="@{/admin/aggiungiPizza}" class="btn btn-success btn-add">Aggiungi Nuova Pizza</a>
-            <div class="table-responsive">
+            <div class="row mb-4">
+                <div class="col-12 d-flex justify-content-center">
+                    <div class="input-group w-50 shadow">
+                        <input id="searchInput" type="text" class="form-control" placeholder="Cerca per nome..." aria-label="Cerca">
+                        <select id="searchCategory" class="form-select" style="max-width: 180px;">
+                            <option value="pizza">Pizze</option>
+                            <option value="bevanda">Bevande</option>
+                            <option value="ingrediente">Ingredienti</option>
+                        </select>
+                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    </div>
+                </div>
+            </div>
+            <h2 class="admin-heading" id="titoloPizze">Gestione Pizze</h2>
+            <a th:href="@{/admin/aggiungiPizza}" class="btn btn-success btn-add" id="btnAggiungiPizza">Aggiungi Nuova Pizza</a>
+            <div class="table-responsive" id="tabellaPizze">
                 <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
@@ -75,9 +88,9 @@
                 </table>
             </div>
 
-            <h2 class="admin-heading mt-5">Gestione Ingredienti</h2>
-            <a th:href="@{/admin/aggiungiIngrediente}" class="btn btn-success btn-add">Aggiungi Nuovo Ingrediente</a>
-            <div class="table-responsive">
+            <h2 class="admin-heading mt-5" id="titoloIngredienti">Gestione Ingredienti</h2>
+            <a th:href="@{/admin/aggiungiIngrediente}" class="btn btn-success btn-add" id="btnAggiungiIngrediente">Aggiungi Nuovo Ingrediente</a>
+            <div class="table-responsive mb-5" id="ingredientiSection">
                 <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
@@ -103,13 +116,18 @@
                                 </form>
                             </td>
                         </tr>
+                        <tr id="noResultsMsg" style="display:none;">
+                            <td colspan="4" class="text-center">
+                                <div class="alert alert-warning mb-0">Non è presente nessuna pizza, bevanda o ingrediente con questo nome sul nostro menu</div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
 
-            <h2 class="admin-heading mt-5">Gestione Bevande</h2>
-            <a th:href="@{/admin/aggiungiBevanda}" class="btn btn-success btn-add">Aggiungi Nuova Bevanda</a>
-            <div class="table-responsive">
+            <h2 class="admin-heading mt-5" id="titoloBevande">Gestione Bevande</h2>
+            <a th:href="@{/admin/aggiungiBevanda}" class="btn btn-success btn-add" id="btnAggiungiBevanda">Aggiungi Nuova Bevanda</a>
+            <div class="table-responsive" id="tabellaBevande">
                 <table class="table table-striped table-bordered">
                     <thead>
                         <tr>
@@ -159,5 +177,43 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function filterRows() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('searchCategory').value;
+            let found = false;
+            // Mostra/nascondi titoli e tabelle
+            document.getElementById('titoloPizze').style.display = (category === 'pizza' || search === '') ? '' : 'none';
+            document.getElementById('btnAggiungiPizza').style.display = (category === 'pizza' || search === '') ? '' : 'none';
+            document.getElementById('tabellaPizze').style.display = (category === 'pizza' || search === '') ? '' : 'none';
+            document.getElementById('titoloBevande').style.display = (category === 'bevanda' || search === '') ? '' : 'none';
+            document.getElementById('btnAggiungiBevanda').style.display = (category === 'bevanda' || search === '') ? '' : 'none';
+            document.getElementById('tabellaBevande').style.display = (category === 'bevanda' || search === '') ? '' : 'none';
+            document.getElementById('titoloIngredienti').style.display = (category === 'ingrediente' || search === '') ? '' : 'none';
+            document.getElementById('btnAggiungiIngrediente').style.display = (category === 'ingrediente' || search === '') ? '' : 'none';
+            document.getElementById('ingredientiSection').style.display = (category === 'ingrediente' || search === '') ? '' : 'none';
+            // Pizze
+            document.querySelectorAll('#tabellaPizze table tbody tr').forEach(row => {
+                const match = (category === 'pizza' && row.querySelector('td:nth-child(2) span').textContent.toLowerCase().includes(search)) || search === '';
+                row.style.display = match ? '' : 'none';
+                if(match && category === 'pizza') found = true;
+            });
+            // Bevande
+            document.querySelectorAll('#tabellaBevande table tbody tr').forEach(row => {
+                const match = (category === 'bevanda' && row.querySelector('td:nth-child(2) span').textContent.toLowerCase().includes(search)) || search === '';
+                row.style.display = match ? '' : 'none';
+                if(match && category === 'bevanda') found = true;
+            });
+            // Ingredienti
+            document.querySelectorAll('#ingredientiSection table tbody tr').forEach(row => {
+                const match = (category === 'ingrediente' && row.querySelector('td:nth-child(2) span').textContent.toLowerCase().includes(search)) || search === '';
+                row.style.display = match ? '' : 'none';
+                if(match && category === 'ingrediente') found = true;
+            });
+            document.getElementById('noResultsMsg').style.display = found ? 'none' : '';
+        }
+        document.getElementById('searchInput').addEventListener('input', filterRows);
+        document.getElementById('searchCategory').addEventListener('change', filterRows);
+    </script>
 </body>
 </html>
